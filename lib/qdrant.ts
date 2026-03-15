@@ -81,7 +81,8 @@ export async function upsertPoints(repoId: string, points: QdrantPoint[], onProg
         ...p,
         payload: {
           ...p.payload,
-          content: p.payload?.content ? sanitizeUtf8(p.payload.content as string) : ""
+          content: p.payload?.content ? sanitizeUtf8(p.payload.content as string) : "",
+          filePath: p.payload?.filePath ? sanitizeUtf8(p.payload.filePath as string) : "",
         }
       }));
 
@@ -104,6 +105,11 @@ export async function searchSimilar(repoId: string, queryVector: number[], topK:
       vector: queryVector,
       limit: topK,
       with_payload: true,
+      filter: {
+        must_not: [
+          { key: "type", match: { value: "metadata" } },
+        ],
+      },
     });
     return results;
   } catch (error) {

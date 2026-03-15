@@ -130,7 +130,16 @@ export async function fetchRepoAsZip(owner: string, repo: string): Promise<{ pat
   const response = await fetch(`https://github.com/${owner}/${repo}/archive/refs/heads/${defaultBranch}.zip`);
   if (!response.ok) throw new Error("Failed to download repository ZIP.");
 
+  // Guard against OOM: reject ZIPs larger than 200MB
+  const contentLength = response.headers.get("content-length");
+  if (contentLength && parseInt(contentLength, 10) > 200 * 1024 * 1024) {
+    throw new Error("Repository is too large to process (>200MB ZIP). Try a smaller repository.");
+  }
+
   const buffer = await response.arrayBuffer();
+  if (buffer.byteLength > 200 * 1024 * 1024) {
+    throw new Error("Repository is too large to process (>200MB ZIP). Try a smaller repository.");
+  }
   const zip = await JSZip.loadAsync(buffer);
 
   const results: { path: string; content: string }[] = [];

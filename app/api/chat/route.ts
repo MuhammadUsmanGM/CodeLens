@@ -7,7 +7,7 @@ import { buildHybridPrompt } from "@/lib/prompts";
 import { GEMINI_MODEL } from "@/lib/constants";
 import { getGoogleApiKey } from "@/lib/env";
 
-export const maxDuration = 30;
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {

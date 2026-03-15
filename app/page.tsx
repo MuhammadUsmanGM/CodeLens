@@ -140,6 +140,8 @@ export default function Home() {
               toast.success("Neural link established! Data indexed.", {
                 duration: 5000
               });
+              setIsAnalyzing(false);
+              setSteps(INITIAL_STEPS);
               setTimeout(() => {
                 router.push(`/chat/${encodeURIComponent(event.repo_id)}`);
               }, 1500);

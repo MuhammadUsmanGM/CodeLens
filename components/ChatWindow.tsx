@@ -37,7 +37,8 @@ export function ChatWindow({ repoId }: ChatWindowProps) {
     const botPlaceholder: ChatMessage = { role: "bot", content: "", timestamp: new Date() };
 
     // Capture history from current messages BEFORE state update
-    const historyForApi = messages.map(m => ({
+    // Limit to last 20 messages to stay within Gemini's context window
+    const historyForApi = messages.slice(-20).map(m => ({
       role: m.role === "user" ? "user" : "assistant",
       content: m.content,
     }));
@@ -105,6 +106,14 @@ export function ChatWindow({ repoId }: ChatWindowProps) {
                 return updated;
               });
             } else if (event === "error") {
+              // Remove empty bot placeholder on error
+              setMessages(prev => {
+                const lastMsg = prev[prev.length - 1];
+                if (lastMsg?.role === "bot" && lastMsg.content === "") {
+                  return prev.slice(0, -1);
+                }
+                return prev;
+              });
               setError(data);
               setIsLoading(false);
             }
@@ -112,6 +121,14 @@ export function ChatWindow({ repoId }: ChatWindowProps) {
         }
       }
     } catch (err: any) {
+      // Remove empty bot placeholder on fetch error
+      setMessages(prev => {
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg?.role === "bot" && lastMsg.content === "") {
+          return prev.slice(0, -1);
+        }
+        return prev;
+      });
       setError(err.message || "Failed to get response");
     } finally {
       setIsLoading(false);

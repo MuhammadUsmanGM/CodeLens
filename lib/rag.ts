@@ -24,9 +24,21 @@ function detectMentionedFiles(message: string, fileTree: string): string[] {
 
   return paths.filter(p => {
     const lowerPath = p.toLowerCase();
-    // Match full path or just filename
+    // Only match full path or path with at least one directory separator
+    // This avoids false positives on bare filenames like "index.ts"
+    if (lowerMessage.includes(lowerPath)) return true;
     const fileName = lowerPath.split("/").pop() || "";
-    return lowerMessage.includes(lowerPath) || lowerMessage.includes(fileName);
+    // Only match bare filename if it contains a distinguishing name (not generic)
+    // and the user used a path-like reference (with / or .)
+    if (fileName.length > 0 && lowerPath.includes("/")) {
+      // Require at least parent/filename match to avoid matching "index.ts" everywhere
+      const parts = lowerPath.split("/");
+      if (parts.length >= 2) {
+        const parentAndFile = parts.slice(-2).join("/");
+        if (lowerMessage.includes(parentAndFile)) return true;
+      }
+    }
+    return false;
   });
 }
 
