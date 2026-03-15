@@ -57,9 +57,7 @@ export async function POST(req: NextRequest) {
         
         // 7. Qdrant Setup
         sendStep({ step: "embedding", message: "Preparing vector database..." });
-        if (!(await collectionExists(repoId))) {
-          await createCollection(repoId);
-        }
+        await createCollection(repoId);
 
         const points: QdrantPoint[] = chunks.map((chunk, i) => ({
           id: crypto.randomUUID(),

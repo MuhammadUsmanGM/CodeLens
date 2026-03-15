@@ -25,5 +25,5 @@ export const QDRANT_VECTOR_SIZE = 384; // Local all-MiniLM-L6-v2 size
 export const RAG_TOP_K = 5;
 export const QDRANT_UPSERT_BATCH_SIZE = 100;
 
-export const GEMINI_MODEL = "gemini-2.0-flash-lite"; // Primary reasoning model
+export const GEMINI_MODEL = "gemini-2.5-flash-lite"; // Primary reasoning model
 export const EMBEDDING_MODEL = "Xenova/all-MiniLM-L6-v2"; // Local embedding model

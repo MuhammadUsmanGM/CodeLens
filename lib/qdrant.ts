@@ -25,17 +25,33 @@ function getCollectionName(repoId: string) {
 export async function collectionExists(repoId: string): Promise<boolean> {
   const collectionName = getCollectionName(repoId);
   try {
-    const result = await getQdrantClient().getCollections();
-    return result.collections.some(c => c.name === collectionName);
+    await getQdrantClient().getCollection(collectionName);
+    return true;
   } catch (error) {
-    console.error("Error checking collection existence:", error);
     return false;
   }
 }
 
 export async function createCollection(repoId: string) {
   const collectionName = getCollectionName(repoId);
-  await getQdrantClient().createCollection(collectionName, {
+  const client = getQdrantClient();
+
+  try {
+    const info = await client.getCollection(collectionName);
+    const existingSize = (info.config.params.vectors as any).size;
+    
+    if (existingSize !== QDRANT_VECTOR_SIZE) {
+      console.log(`Dimension mismatch for ${collectionName}: Expected ${QDRANT_VECTOR_SIZE}, found ${existingSize}. Recreating...`);
+      await client.deleteCollection(collectionName);
+    } else {
+      // Dimensions match, we're good
+      return;
+    }
+  } catch (error) {
+    // Collection doesn't exist, proceed to create
+  }
+
+  await client.createCollection(collectionName, {
     vectors: {
       size: QDRANT_VECTOR_SIZE,
       distance: "Cosine",
