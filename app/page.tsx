@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { RepoInput } from "@/components/RepoInput";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ProcessingScreen, Step } from "@/components/ProcessingScreen";
-import { Toaster, toast, useToasterStore } from "react-hot-toast";
+import { Toaster, toast } from "sonner";
 import { ArrowRight, Github, Linkedin } from "lucide-react";
 
 const INITIAL_STEPS: Step[] = [
@@ -23,17 +23,6 @@ export default function Home() {
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
   const [recentRepos, setRecentRepos] = useState<string[]>([]);
   const router = useRouter();
-  const { toasts } = useToasterStore();
-
-  // Limit toast count to 3, keeping newest
-  useEffect(() => {
-    const visibleToasts = toasts.filter((t) => t.visible);
-    if (visibleToasts.length > 3) {
-      visibleToasts
-        .slice(0, visibleToasts.length - 3) // Dismiss oldest ones
-        .forEach((t) => toast.dismiss(t.id));
-    }
-  }, [toasts]);
 
   useEffect(() => {
     // Load recent repos from local storage
@@ -58,7 +47,7 @@ export default function Home() {
       
       toastId = toast.loading("Checking neural index...", {
         style: {
-          borderRadius: '12px',
+          borderRadius: '16px',
           background: '#111',
           color: '#fff',
           border: '1px solid rgba(245, 166, 35, 0.2)'
@@ -70,9 +59,8 @@ export default function Home() {
       if (checkRes.ok) {
         const data = await checkRes.json();
         if (data.status === "ready") {
-          toast.success("Intelligence already established!", {
+          toast.success("Intelligence established!", {
             id: toastId,
-            icon: "⚡",
             duration: 3000
           });
           router.push(`/chat/${encodeURIComponent(repoId)}`);
@@ -89,7 +77,6 @@ export default function Home() {
       
       toast.dismiss(toastId);
       toast.success("Identity verified. Starting neural mapping...", {
-        icon: "🧠",
         duration: 4000
       });
 
@@ -137,8 +124,6 @@ export default function Home() {
             if (event.step === "complete") {
               saveToRecent(event.repo_id);
               toast.success("Neural link established! Data indexed.", {
-                className: "bg-primary text-black font-bold",
-                icon: "🚀",
                 duration: 5000
               });
               setTimeout(() => {
@@ -189,7 +174,15 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen bg-background overflow-x-hidden selection:bg-primary/30">
-      <Toaster position="top-center" />
+      <Toaster 
+        position="top-center" 
+        visibleToasts={3} 
+        expand={false} 
+        duration={7000} 
+        theme="system"
+        closeButton
+        richColors
+      />
       
       {/* Dynamic Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
