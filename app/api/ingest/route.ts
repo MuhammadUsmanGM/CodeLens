@@ -1,6 +1,7 @@
 // app/api/ingest/route.ts
 
 import { NextRequest } from "next/server";
+import crypto from "crypto";
 import { parseGithubUrl, fetchRepoAsZip } from "@/lib/github";
 import { chunkFiles } from "@/lib/chunker";
 import { embedTexts } from "@/lib/embedder";
@@ -88,7 +89,12 @@ export async function POST(req: NextRequest) {
         controller.close();
       } catch (error: any) {
         console.error("Ingestion Error:", error);
-        sendStep({ step: "error", message: error.message || "An unknown error occurred" });
+        // Send a clean error message to avoid breaking SSE with large objects
+        const cleanMessage = error.status === 400 
+          ? "Neural metadata mismatch (Qdrant 400). Re-indexing required."
+          : (error.message || "An unknown error occurred");
+          
+        sendStep({ step: "error", message: cleanMessage });
         controller.close();
       }
     },

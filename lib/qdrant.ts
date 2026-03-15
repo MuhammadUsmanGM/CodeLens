@@ -4,6 +4,11 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 import { QdrantPoint } from "@/types";
 import { QDRANT_VECTOR_SIZE, QDRANT_UPSERT_BATCH_SIZE } from "./constants";
 
+function sanitizeUtf8(str: string): string {
+  // Removes lone surrogates that break JSON stringification
+  return str.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/g, '');
+}
+
 let client: QdrantClient | null = null;
 
 export function getQdrantClient() {
@@ -38,17 +43,23 @@ export async function createCollection(repoId: string) {
 
   try {
     const info = await client.getCollection(collectionName);
-    const existingSize = (info.config.params.vectors as any).size;
+    const vectorsConfig = info.config.params.vectors;
     
+    // Handle both single vector and multiple vector configurations
+    const existingSize = (vectorsConfig as any).size || (Object.values(vectorsConfig as any)[0] as any).size;
+    
+    console.log(`[Qdrant] Collection ${collectionName} found. Neural Size: ${existingSize}`);
+
     if (existingSize !== QDRANT_VECTOR_SIZE) {
-      console.log(`Dimension mismatch for ${collectionName}: Expected ${QDRANT_VECTOR_SIZE}, found ${existingSize}. Recreating...`);
+      console.warn(`[Qdrant] Dimension Mismatch! expected ${QDRANT_VECTOR_SIZE}, found ${existingSize}. Re-anchoring...`);
       await client.deleteCollection(collectionName);
+      // Brief pause for cluster consistency
+      await new Promise(r => setTimeout(r, 1000));
     } else {
-      // Dimensions match, we're good
       return;
     }
   } catch (error) {
-    // Collection doesn't exist, proceed to create
+    console.log(`[Qdrant] Creating new neural index for ${collectionName}...`);
   }
 
   await client.createCollection(collectionName, {
@@ -64,10 +75,35 @@ export async function upsertPoints(repoId: string, points: QdrantPoint[], onProg
   
   for (let i = 0; i < points.length; i += QDRANT_UPSERT_BATCH_SIZE) {
     const batch = points.slice(i, i + QDRANT_UPSERT_BATCH_SIZE);
-    await getQdrantClient().upsert(collectionName, {
-      wait: true,
-      points: batch,
+    
+    // Clean data check
+    batch.forEach(p => {
+      if (p.vector.some(v => isNaN(v) || !isFinite(v))) {
+        throw new Error(`Neural anomaly detected in chunk ${p.id}: vector contains non-finite values`);
+      }
     });
+
+    try {
+      // Sanitize payloads to prevent lone surrogate JSON errors
+      const sanitizedBatch = batch.map(p => ({
+        ...p,
+        payload: {
+          ...p.payload,
+          content: p.payload?.content ? sanitizeUtf8(p.payload.content as string) : ""
+        }
+      }));
+
+      await getQdrantClient().upsert(collectionName, {
+        wait: true,
+        points: sanitizedBatch,
+      });
+    } catch (error: any) {
+      if (error.data) {
+        console.error("[Qdrant] Full Error Details:", JSON.stringify(error.data, null, 2));
+      }
+      throw error;
+    }
+    
     if (onProgress) onProgress(Math.min(i + QDRANT_UPSERT_BATCH_SIZE, points.length), points.length);
   }
 }

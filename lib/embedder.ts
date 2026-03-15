@@ -24,6 +24,10 @@ export async function embedTexts(texts: string[], onProgress?: (current: number,
       normalize: true,
     });
     
+    if (i === 0) {
+      console.log(`[Neural] Generator active. Vector dimensions: ${output.data.length}`);
+    }
+
     // Convert Float32Array to number[]
     embeddings.push(Array.from(output.data));
     

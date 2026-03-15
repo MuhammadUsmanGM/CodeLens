@@ -55,7 +55,13 @@ export default function Home() {
         }
       });
 
-      // 2. Check Cache First (The "Instant" Hack)
+      // 2. Proactive UI Shift
+      const name = parts[1].replace(".git", "");
+      setRepoName(name);
+      setSteps(INITIAL_STEPS);
+      setProgress(5);
+
+      // 3. Check Cache First (The "Instant" Hack)
       const checkRes = await fetch(`/api/repo/${encodeURIComponent(repoId)}`);
       if (checkRes.ok) {
         const data = await checkRes.json();
@@ -69,13 +75,8 @@ export default function Home() {
         }
       }
 
-      // 3. New Repo? Start Visual Ingestion
-      const name = parts[1].replace(".git", "");
-      setRepoName(name);
+      // 4. Cache Miss or Mismatch? Enter Neural Engagement
       setIsAnalyzing(true);
-      setProgress(5);
-      setSteps(INITIAL_STEPS);
-      
       toast.dismiss(toastId);
       toast.success("Identity verified. Starting neural mapping...", {
         duration: 4000

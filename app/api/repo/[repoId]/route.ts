@@ -1,7 +1,8 @@
 // app/api/repo/[repoId]/route.ts
 
 import { NextRequest } from "next/server";
-import { collectionExists, getCollectionInfo, deleteCollection } from "@/lib/qdrant";
+import { getQdrantClient, deleteCollection } from "@/lib/qdrant";
+import { QDRANT_VECTOR_SIZE } from "@/lib/constants";
 
 export async function GET(
   req: NextRequest,
@@ -10,17 +11,28 @@ export async function GET(
   const { repoId } = await params;
   const decodedRepoId = decodeURIComponent(repoId);
 
-  const exists = await collectionExists(decodedRepoId);
-  if (!exists) {
-    return Response.json({ status: "not_found" }, { status: 404 });
-  }
+  const client = getQdrantClient();
+  try {
+    const info = await client.getCollection(decodedRepoId);
+    const existingSize = (info.config.params.vectors as any).size;
 
-  const info = await getCollectionInfo(decodedRepoId);
-  return Response.json({
-    repoId: decodedRepoId,
-    chunkCount: info?.pointsCount || 0,
-    status: "ready"
-  });
+    if (existingSize !== QDRANT_VECTOR_SIZE) {
+      return Response.json({ 
+        status: "reindex_required", 
+        reason: "dimension_mismatch",
+        currentSize: existingSize,
+        requiredSize: QDRANT_VECTOR_SIZE
+      });
+    }
+
+    return Response.json({
+      repoId: decodedRepoId,
+      chunkCount: info.points_count || 0,
+      status: "ready"
+    });
+  } catch (error) {
+    return Response.json({ status: "not_found" });
+  }
 }
 
 export async function DELETE(
