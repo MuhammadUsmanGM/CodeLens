@@ -20,6 +20,13 @@ export function detectLanguage(filePath: string): string {
     case "c":
     case "h":
     case "hpp": return "cpp";
+    case "json": return "json";
+    case "yaml":
+    case "yml": return "yaml";
+    case "toml": return "toml";
+    case "css": return "css";
+    case "html": return "html";
+    case "sh": return "bash";
     default: return "text";
   }
 }
@@ -30,7 +37,17 @@ export function getLanguageSeparators(language: string): string[] {
       return ["\nclass ", "\ndef ", "\n\n", "\n", " "];
     case "typescript":
     case "javascript":
-      return ["\nclass ", "\nfunction ", "\nconst ", "\ninterface ", "\ntype ", "\n\n", "\n", " "];
+      return ["\nclass ", "\nfunction ", "\nconst ", "\ninterface ", "\ntype ", "\nexport ", "\n\n", "\n", " "];
+    case "java":
+      return ["\npublic class ", "\nclass ", "\npublic ", "\nprivate ", "\nprotected ", "\n\n", "\n", " "];
+    case "go":
+      return ["\nfunc ", "\ntype ", "\nvar ", "\nconst ", "\n\n", "\n", " "];
+    case "rust":
+      return ["\nfn ", "\npub fn ", "\nstruct ", "\nimpl ", "\nenum ", "\ntrait ", "\nmod ", "\n\n", "\n", " "];
+    case "cpp":
+      return ["\nclass ", "\nstruct ", "\nvoid ", "\nint ", "\nnamespace ", "\ntemplate", "\n\n", "\n", " "];
+    case "sql":
+      return ["\nCREATE ", "\nSELECT ", "\nINSERT ", "\nUPDATE ", "\nDELETE ", "\nALTER ", "\n\n", "\n", " "];
     case "markdown":
       return ["\n# ", "\n## ", "\n### ", "\n\n", "\n", " "];
     default:

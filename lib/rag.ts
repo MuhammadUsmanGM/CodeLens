@@ -8,7 +8,11 @@ import { RepoChunk } from "@/types";
 export async function retrieveChunks(repoId: string, query: string, topK = RAG_TOP_K): Promise<RepoChunk[]> {
   const vector = await embedQuery(query);
   const hits = await searchSimilar(repoId, vector, topK);
-  
+
+  if (hits.length === 0) {
+    throw new Error("No indexed data found for this repository. Please re-index it from the home page.");
+  }
+
   return hits.map(hit => ({
     content: (hit.payload as any).content,
     filePath: (hit.payload as any).filePath,

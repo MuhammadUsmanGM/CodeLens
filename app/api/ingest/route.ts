@@ -46,8 +46,12 @@ export async function POST(req: NextRequest) {
         // 4. Chunking
         sendStep({ step: "chunking", message: "Splitting code into searchable chunks..." });
         const chunks = chunkFiles(filesWithContent);
-        
-        // 6. Embedding with High-Speed Local Neural Engine
+
+        if (chunks.length === 0) {
+          throw new Error("No indexable content found. Files may be empty or too small to chunk.");
+        }
+
+        // 5. Embedding with High-Speed Local Neural Engine
         sendStep({ step: "embedding", message: "Starting High-Speed Local Neural Alignment..." });
         const chunkContents = chunks.map(c => c.content);
         const vectors = await embedTexts(chunkContents, (current, total) => {

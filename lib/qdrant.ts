@@ -43,17 +43,13 @@ export async function createCollection(repoId: string) {
   try {
     const info = await client.getCollection(collectionName);
     const vectorsConfig = info.config.params.vectors;
-    
+
     // Handle both single vector and multiple vector configurations
     const existingSize = (vectorsConfig as any).size || (Object.values(vectorsConfig as any)[0] as any).size;
-    
-    if (existingSize !== QDRANT_VECTOR_SIZE) {
-      await client.deleteCollection(collectionName);
-      // Brief pause for cluster consistency
-      await new Promise(r => setTimeout(r, 1000));
-    } else {
-      return;
-    }
+
+    // Always delete and recreate to ensure fresh data (avoids stale/duplicate chunks on re-ingest)
+    await client.deleteCollection(collectionName);
+    await new Promise(r => setTimeout(r, 1000));
   } catch (error) {
     // Collection doesn't exist yet — will create below
   }

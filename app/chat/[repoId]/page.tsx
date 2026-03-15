@@ -21,17 +21,23 @@ export default function ChatPage() {
       try {
         const res = await fetch(`/api/repo/${encodeURIComponent(repoId)}`);
         if (!res.ok) {
-          if (res.status === 404) {
-            toast.error("Repository not indexed");
-            router.push("/");
-            return;
-          }
-          throw new Error("Failed to fetch repo info");
+          toast.error("Failed to load repository");
+          router.push("/");
+          return;
         }
         const data = await res.json();
+        if (data.status === "not_found" || data.status === "reindex_required") {
+          toast.error(data.status === "reindex_required"
+            ? "Repository needs re-indexing"
+            : "Repository not indexed yet"
+          );
+          router.push("/");
+          return;
+        }
         setRepoInfo(data);
       } catch (error) {
-        // Failed to fetch repo info — handled by loading state
+        toast.error("Failed to connect to server");
+        router.push("/");
       } finally {
         setIsLoading(false);
       }
