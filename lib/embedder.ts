@@ -29,13 +29,13 @@ async function fetchWithRetry<T>(fn: () => Promise<T>, retries = 5, backoff = 30
     if (retries > 0 && isRateLimit) {
       console.log(`Neural rate limit reached. Synchronization resuming in ${backoff / 1000}s... (${retries} neural cycles left)`);
       await sleep(backoff);
-      return fetchWithRetry(fn, retries - 1, backoff * 2);
+      return fetchWithRetry(fn, retries - 1, backoff * 1.5); // Less aggressive backoff increment
     }
     throw error;
   }
 }
 
-export async function embedTexts(texts: string[]): Promise<number[][]> {
+export async function embedTexts(texts: string[], onProgress?: (current: number, total: number) => void): Promise<number[][]> {
   const model = getGenAI().getGenerativeModel({ model: EMBEDDING_MODEL });
   const embeddings: number[][] = [];
 
@@ -43,7 +43,7 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
     const batch = texts.slice(i, i + EMBEDDING_BATCH_SIZE);
     
     // Safety delay between batches for free tier
-    if (i > 0) await sleep(1000);
+    if (i > 0) await sleep(2000); // Increased to 2s
 
     const result = await fetchWithRetry(() => 
       model.batchEmbedContents({
@@ -55,6 +55,7 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
     );
     
     embeddings.push(...result.embeddings.map(e => e.values));
+    if (onProgress) onProgress(Math.min(i + EMBEDDING_BATCH_SIZE, texts.length), texts.length);
   }
 
   return embeddings;

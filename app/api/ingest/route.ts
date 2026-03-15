@@ -51,10 +51,15 @@ export async function POST(req: NextRequest) {
         sendStep({ step: "chunking", message: "Splitting code into searchable chunks..." });
         const chunks = chunkFiles(filesWithContent);
         
-        // 6. Embedding
-        sendStep({ step: "embedding", message: `Generating embeddings for ${chunks.length} chunks...` });
+        // 6. Embedding with Live Progress
+        sendStep({ step: "embedding", message: `Neural processing initiated for ${chunks.length} segments...` });
         const chunkContents = chunks.map(c => c.content);
-        const vectors = await embedTexts(chunkContents);
+        const vectors = await embedTexts(chunkContents, (current, total) => {
+          sendStep({ 
+            step: "embedding", 
+            message: `Aligning neural vectors: ${current} / ${total} segments complete` 
+          });
+        });
         
         // 7. Qdrant Setup
         sendStep({ step: "embedding", message: "Preparing vector database..." });
@@ -73,7 +78,12 @@ export async function POST(req: NextRequest) {
         }));
 
         sendStep({ step: "embedding", message: "Storing vectors in Qdrant Cloud..." });
-        await upsertPoints(repoId, points);
+        await upsertPoints(repoId, points, (current, total) => {
+          sendStep({ 
+            step: "embedding", 
+            message: `Neural storage: ${current} / ${total} vectors anchored` 
+          });
+        });
 
         // 8. Complete
         sendStep({ 

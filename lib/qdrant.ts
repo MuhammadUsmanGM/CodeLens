@@ -43,7 +43,7 @@ export async function createCollection(repoId: string) {
   });
 }
 
-export async function upsertPoints(repoId: string, points: QdrantPoint[]) {
+export async function upsertPoints(repoId: string, points: QdrantPoint[], onProgress?: (current: number, total: number) => void) {
   const collectionName = getCollectionName(repoId);
   
   for (let i = 0; i < points.length; i += QDRANT_UPSERT_BATCH_SIZE) {
@@ -52,6 +52,7 @@ export async function upsertPoints(repoId: string, points: QdrantPoint[]) {
       wait: true,
       points: batch,
     });
+    if (onProgress) onProgress(Math.min(i + QDRANT_UPSERT_BATCH_SIZE, points.length), points.length);
   }
 }
 
