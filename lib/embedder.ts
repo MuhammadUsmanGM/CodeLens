@@ -1,7 +1,7 @@
 // lib/embedder.ts
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { EMBEDDING_BATCH_SIZE } from "./constants";
+import { EMBEDDING_BATCH_SIZE, EMBEDDING_MODEL } from "./constants";
 
 let genAI: GoogleGenerativeAI | null = null;
 
@@ -15,7 +15,7 @@ export function getGenAI() {
 }
 
 export async function embedTexts(texts: string[]): Promise<number[][]> {
-  const model = getGenAI().getGenerativeModel({ model: "embedding-001" });
+  const model = getGenAI().getGenerativeModel({ model: EMBEDDING_MODEL });
   const embeddings: number[][] = [];
 
   for (let i = 0; i < texts.length; i += EMBEDDING_BATCH_SIZE) {
@@ -41,7 +41,7 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
 }
 
 export async function embedQuery(query: string): Promise<number[]> {
-  const model = getGenAI().getGenerativeModel({ model: "embedding-001" });
+  const model = getGenAI().getGenerativeModel({ model: EMBEDDING_MODEL });
   
   try {
     const result = await model.embedContent(query);
