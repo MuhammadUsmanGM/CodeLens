@@ -177,57 +177,70 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen flex flex-col items-center justify-center bg-background overflow-x-hidden">
+    <main className="relative min-h-screen bg-background overflow-x-hidden selection:bg-primary/30">
       <Toaster position="bottom-center" />
       
-      {/* Background Decor */}
-      <div className="absolute top-0 left-0 w-full h-full -z-10 opacity-30 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
+      {/* Dynamic Background Effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 mesh-gradient opacity-40 dark:opacity-20" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-amber-500/5 blur-[100px] rounded-full delay-1000 animate-pulse" />
       </div>
 
-      {/* Header / Theme Toggle */}
-      <div className="absolute top-6 right-6">
+      {/* Header */}
+      <div className="absolute top-0 right-0 p-8 z-50">
         <ThemeToggle />
       </div>
 
-      <div className="w-full flex flex-col items-center justify-center gap-12">
+      <div className="relative z-10 container mx-auto px-6 py-20 flex flex-col items-center justify-center min-h-screen gap-20">
         {!isAnalyzing ? (
           <>
             <RepoInput onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
             
             {recentRepos.length > 0 && (
-              <div className="w-full max-w-2xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
-                <div className="flex items-center gap-2 text-muted-foreground text-[10px] font-bold uppercase tracking-[0.2em] mb-4 pl-1">
-                  <span className="w-8 h-px bg-border" />
-                  Recent Explorations
+              <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-muted-foreground/60 whitespace-nowrap">
+                    NEURAL HISTORY
+                  </span>
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {recentRepos.map((repo) => (
                     <button
                       key={repo}
                       onClick={() => router.push(`/chat/${encodeURIComponent(repo)}`)}
-                      className="flex items-center justify-between p-4 bg-card/40 hover:bg-card border border-border hover:border-primary/50 rounded-2xl transition-all group text-left"
+                      className="group relative flex flex-col p-6 rounded-3xl bg-card/30 border border-white/5 hover:border-primary/40 hover:bg-card/50 transition-all duration-500 text-left overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/5"
                     >
-                      <span className="text-sm font-medium truncate pr-4">{repo}</span>
-                      <div className="p-1.5 rounded-lg bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                        <ArrowRight size={14} />
+                      <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ArrowRight size={14} className="text-primary" />
+                      </div>
+                      <span className="text-xs font-bold text-primary mb-2 uppercase tracking-tighter opacity-70 group-hover:opacity-100">Index Active</span>
+                      <span className="text-lg font-semibold truncate text-foreground/90 group-hover:text-foreground">{repo}</span>
+                      <div className="mt-4 flex items-center gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                        <div className="w-1 h-4 bg-primary/30 rounded-full" />
+                        Explore Intelligence
                       </div>
                     </button>
                   ))}
                 </div>
               </div>
             )}
+            
+            {/* Minimal Footer */}
+            <div className="flex flex-col items-center gap-2 opacity-30 mt-10">
+              <span className="text-[10px] font-bold tracking-[0.3em] uppercase">Built with Gemini 2.0 Flash</span>
+              <div className="h-4 w-px bg-primary/50" />
+            </div>
           </>
         ) : (
-          <ProcessingScreen steps={steps} progress={progress} repoName={repoName} />
+          <div className="w-full max-w-3xl transform hover:scale-105 transition-transform duration-1000">
+            <ProcessingScreen steps={steps} progress={progress} repoName={repoName} />
+          </div>
         )}
       </div>
-
-      {/* Footer / Info */}
-      <footer className="absolute bottom-8 text-muted-foreground text-sm font-medium">
-        &copy; {new Date().getFullYear()} REPOIQ. Powered by Gemini 2.0 Flash.
-      </footer>
     </main>
   );
 }

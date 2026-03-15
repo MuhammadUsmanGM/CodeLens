@@ -88,14 +88,45 @@
   }
   
   pre {
-    @apply bg-muted/30 p-4 rounded-xl overflow-x-auto my-3 border border-border/50 font-mono text-sm;
+    @apply bg-muted/10 p-4 rounded-xl overflow-x-auto my-3 border border-border/50 font-mono text-sm;
   }
   
   code {
-    @apply bg-muted/30 px-1.5 py-0.5 rounded text-primary font-mono text-[0.9em];
+    @apply bg-muted/20 px-1.5 py-0.5 rounded text-primary font-mono text-[0.9em];
   }
 
   pre code {
     @apply bg-transparent p-0 text-foreground;
+  }
+
+  /* Premium Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted/30 rounded-full border-4 border-solid border-background hover:bg-primary transition-colors;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-white/10 hover:bg-primary;
+  }
+}
+
+@layer utilities {
+  .mesh-gradient {
+    background: radial-gradient(at 0% 0%, rgba(245, 166, 35, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(201, 150, 12, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(245, 166, 35, 0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(201, 150, 12, 0.05) 0px, transparent 50%);
+  }
+
+  .glass-card {
+    @apply bg-card/40 backdrop-blur-xl border border-white/10 shadow-2xl;
   }
 }
