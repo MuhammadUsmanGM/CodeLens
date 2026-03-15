@@ -78,10 +78,6 @@ export default function ChatPage() {
             <h1 className="text-sm font-bold uppercase tracking-widest text-foreground truncate max-w-[200px] md:max-w-[400px]">
               {repoId}
             </h1>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase opacity-70">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              {repoInfo?.chunkCount || 0} Chunks Indexed
-            </div>
           </div>
         </div>
 
@@ -97,10 +93,44 @@ export default function ChatPage() {
         </div>
       </header>
 
-      {/* Main Chat Area */}
-      <main className="flex-1 overflow-hidden relative">
-        <ChatWindow repoId={repoId} />
-      </main>
+      {/* Main Layout Container */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar - Context Explorer */}
+        <aside className="hidden lg:flex w-72 border-r border-border flex-col bg-card/30">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Neural Context</h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Status</span>
+                <span className="flex items-center gap-1.5 text-xs font-bold text-green-500 uppercase tracking-tighter">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  Live
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Indexed Chunks</span>
+                <span className="text-xs font-mono font-bold">{repoInfo?.chunkCount || 0}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
+            <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Source Map</h2>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground italic">
+                <Database size={12} />
+                Indexing complete. AI has full access to repository logic.
+              </div>
+              {/* Optional: Add a file list here in the future */}
+            </div>
+          </div>
+        </aside>
+
+        {/* Chat Area */}
+        <main className="flex-1 relative bg-background/50">
+          <ChatWindow repoId={repoId} />
+        </main>
+      </div>
     </div>
   );
 }
