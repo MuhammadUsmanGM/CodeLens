@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { RepoInput } from "@/components/RepoInput";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ProcessingScreen, Step } from "@/components/ProcessingScreen";
-import { Toaster, toast } from "react-hot-toast";
+import { Toaster, toast, useToasterStore } from "react-hot-toast";
 import { ArrowRight, Github, Linkedin } from "lucide-react";
 
 const INITIAL_STEPS: Step[] = [
@@ -23,6 +23,17 @@ export default function Home() {
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
   const [recentRepos, setRecentRepos] = useState<string[]>([]);
   const router = useRouter();
+  const { toasts } = useToasterStore();
+
+  // Limit toast count to 3, keeping newest
+  useEffect(() => {
+    const visibleToasts = toasts.filter((t) => t.visible);
+    if (visibleToasts.length > 3) {
+      visibleToasts
+        .slice(0, visibleToasts.length - 3) // Dismiss oldest ones
+        .forEach((t) => toast.dismiss(t.id));
+    }
+  }, [toasts]);
 
   useEffect(() => {
     // Load recent repos from local storage
@@ -178,7 +189,7 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen bg-background overflow-x-hidden selection:bg-primary/30">
-      <Toaster position="bottom-center" />
+      <Toaster position="top-center" />
       
       {/* Dynamic Background Effects */}
       <div className="fixed inset-0 pointer-events-none">

@@ -6,7 +6,7 @@ import { ArrowLeft, Database, Trash2, Home } from "lucide-react";
 import { ChatWindow } from "@/components/ChatWindow";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RepoInfo } from "@/types";
-import { Toaster, toast } from "react-hot-toast";
+import { Toaster, toast, useToasterStore } from "react-hot-toast";
 
 export default function ChatPage() {
   const params = useParams();
@@ -15,6 +15,17 @@ export default function ChatPage() {
   
   const [repoInfo, setRepoInfo] = useState<RepoInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toasts } = useToasterStore();
+
+  // Limit toast count to 3, keeping newest
+  useEffect(() => {
+    const visibleToasts = toasts.filter((t) => t.visible);
+    if (visibleToasts.length > 3) {
+      visibleToasts
+        .slice(0, visibleToasts.length - 3)
+        .forEach((t) => toast.dismiss(t.id));
+    }
+  }, [toasts]);
 
   useEffect(() => {
     const fetchRepoInfo = async () => {
@@ -62,7 +73,7 @@ export default function ChatPage() {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <Toaster position="bottom-center" />
+      <Toaster position="top-center" />
       
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-border bg-background/50 backdrop-blur-md z-10">

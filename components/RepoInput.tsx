@@ -59,7 +59,7 @@ export function RepoInput({ onAnalyze, isAnalyzing }: RepoInputProps) {
           className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-2"
         >
           {/* Input Box */}
-          <div className="flex items-center flex-1 min-h-[64px] bg-white/70 dark:bg-zinc-900/40 backdrop-blur-2xl border border-black/[0.03] dark:border-white/[0.08] rounded-2xl sm:rounded-[2rem] px-5 group-focus-within:border-primary/40 transition-all duration-500 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-[24px_24px_80px_rgba(0,0,0,0.6)]">
+          <div className="flex items-center flex-1 min-h-[64px] bg-white dark:bg-zinc-900/40 backdrop-blur-2xl border border-zinc-200 dark:border-white/[0.08] rounded-2xl sm:rounded-[2rem] px-5 group-focus-within:border-primary/40 transition-all duration-500 shadow-[0_8px_30px_rgba(0,0,0,0.05)] dark:shadow-[24px_24px_80px_rgba(0,0,0,0.6)]">
             <div className="pr-4 text-primary/40">
               <Github size={22} className="group-hover:text-primary group-focus-within:text-primary transition-colors duration-500" />
             </div>
