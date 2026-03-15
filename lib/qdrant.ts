@@ -3,6 +3,7 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
 import { QdrantPoint } from "@/types";
 import { QDRANT_VECTOR_SIZE, QDRANT_UPSERT_BATCH_SIZE } from "./constants";
+import { getQdrantConfig } from "./env";
 
 function sanitizeUtf8(str: string): string {
   // Removes lone surrogates that break JSON stringification
@@ -13,9 +14,7 @@ let client: QdrantClient | null = null;
 
 export function getQdrantClient() {
   if (!client) {
-    const url = process.env.QDRANT_URL;
-    const apiKey = process.env.QDRANT_API_KEY;
-    if (!url || !apiKey) throw new Error("QDRANT_URL or QDRANT_API_KEY is not set");
+    const { url, apiKey } = getQdrantConfig();
     client = new QdrantClient({ url, apiKey });
   }
   return client;
@@ -48,10 +47,7 @@ export async function createCollection(repoId: string) {
     // Handle both single vector and multiple vector configurations
     const existingSize = (vectorsConfig as any).size || (Object.values(vectorsConfig as any)[0] as any).size;
     
-    console.log(`[Qdrant] Collection ${collectionName} found. Neural Size: ${existingSize}`);
-
     if (existingSize !== QDRANT_VECTOR_SIZE) {
-      console.warn(`[Qdrant] Dimension Mismatch! expected ${QDRANT_VECTOR_SIZE}, found ${existingSize}. Re-anchoring...`);
       await client.deleteCollection(collectionName);
       // Brief pause for cluster consistency
       await new Promise(r => setTimeout(r, 1000));
@@ -59,7 +55,7 @@ export async function createCollection(repoId: string) {
       return;
     }
   } catch (error) {
-    console.log(`[Qdrant] Creating new neural index for ${collectionName}...`);
+    // Collection doesn't exist yet — will create below
   }
 
   await client.createCollection(collectionName, {
@@ -98,9 +94,6 @@ export async function upsertPoints(repoId: string, points: QdrantPoint[], onProg
         points: sanitizedBatch,
       });
     } catch (error: any) {
-      if (error.data) {
-        console.error("[Qdrant] Full Error Details:", JSON.stringify(error.data, null, 2));
-      }
       throw error;
     }
     
@@ -118,7 +111,6 @@ export async function searchSimilar(repoId: string, queryVector: number[], topK:
     });
     return results;
   } catch (error) {
-    console.error("Error searching in Qdrant:", error);
     return [];
   }
 }

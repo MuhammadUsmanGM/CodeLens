@@ -1,4 +1,5 @@
 import { ALLOWED_EXTENSIONS, SKIP_DIRS, MAX_FILES, MAX_FILE_SIZE_BYTES, GITHUB_FETCH_CONCURRENCY } from "./constants";
+import { getGithubToken } from "./env";
 import JSZip from "jszip";
 
 export interface GitTreeItem {
@@ -27,7 +28,7 @@ export function parseGithubUrl(url: string) {
 }
 
 async function fetchGithub(path: string) {
-  const token = process.env.GITHUB_TOKEN;
+  const token = getGithubToken();
   const headers: HeadersInit = {
     "Accept": "application/vnd.github.v3+json",
     "X-GitHub-Api-Version": "2022-11-28",
@@ -87,7 +88,6 @@ export async function fetchFileContent(owner: string, repo: string, path: string
     }
     return null;
   } catch (error) {
-    console.error(`Error fetching file ${path}:`, error);
     return null;
   }
 }
@@ -111,7 +111,7 @@ export async function fetchFilesInParallel(owner: string, repo: string, files: G
 }
 
 export async function fetchRepoAsZip(owner: string, repo: string): Promise<{ path: string; content: string }[]> {
-  const token = process.env.GITHUB_TOKEN;
+  const token = getGithubToken();
   const headers: HeadersInit = {
     "Accept": "application/vnd.github.v3+json",
   };

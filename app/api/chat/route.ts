@@ -5,6 +5,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { retrieveChunks, buildContext, buildSystemPrompt } from "@/lib/rag";
 import { SYSTEM_PROMPT } from "@/lib/prompts";
 import { GEMINI_MODEL } from "@/lib/constants";
+import { getGoogleApiKey } from "@/lib/env";
 
 export const maxDuration = 30;
 export const dynamic = "force-dynamic";
@@ -23,9 +24,7 @@ export async function POST(req: NextRequest) {
     const sources = Array.from(new Set(chunks.map(c => c.filePath)));
 
     // 2. Initialize Gemini
-    const apiKey = process.env.GOOGLE_API_KEY;
-    if (!apiKey) throw new Error("GOOGLE_API_KEY not set");
-    const genAI = new GoogleGenerativeAI(apiKey);
+    const genAI = new GoogleGenerativeAI(getGoogleApiKey());
     const model = genAI.getGenerativeModel({ 
       model: GEMINI_MODEL, 
       systemInstruction: `${SYSTEM_PROMPT}\n\n<retrieved_context>\n${context}\n</retrieved_context>`
@@ -60,7 +59,6 @@ export async function POST(req: NextRequest) {
           sendEvent("done", "[DONE]");
           controller.close();
         } catch (error: any) {
-          console.error("Chat Stream Error:", error);
           sendEvent("error", error.message || "An error occurred during chat");
           controller.close();
         }
@@ -75,7 +73,6 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("Chat API Error:", error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 }

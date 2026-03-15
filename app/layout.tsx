@@ -20,6 +20,21 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo.webp",
   },
+  openGraph: {
+    title: "RepoIQ | Neural Codebase Explorer",
+    description: "AI-powered repository analysis and conversational indexer using advanced RAG technology.",
+    type: "website",
+    images: ["/logo.webp"],
+  },
+  twitter: {
+    card: "summary",
+    title: "RepoIQ | Neural Codebase Explorer",
+    description: "AI-powered repository analysis and conversational indexer using advanced RAG technology.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

@@ -91,7 +91,6 @@ export async function POST(req: NextRequest) {
         
         controller.close();
       } catch (error: any) {
-        console.error("Ingestion Error:", error);
         // Send a clean error message to avoid breaking SSE with large objects
         const cleanMessage = error.status === 400 
           ? "Neural metadata mismatch (Qdrant 400). Re-indexing required."

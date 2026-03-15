@@ -145,7 +145,7 @@ export default function Home() {
               }, 1500);
             }
           } catch (e) {
-            console.error("SSE parse error:", e);
+            // JSON parse error on SSE event — skip malformed event
           }
         }
 
@@ -161,7 +161,6 @@ export default function Home() {
       // Ignore abort errors (user navigated away or re-submitted)
       if (error.name === "AbortError") return;
 
-      console.error("Ingestion Failure:", error);
       toast.error(error.message || "A neural link interruption occurred", {
         id: toastId,
         style: {

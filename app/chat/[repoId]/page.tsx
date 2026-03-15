@@ -31,7 +31,7 @@ export default function ChatPage() {
         const data = await res.json();
         setRepoInfo(data);
       } catch (error) {
-        console.error(error);
+        // Failed to fetch repo info — handled by loading state
       } finally {
         setIsLoading(false);
       }
