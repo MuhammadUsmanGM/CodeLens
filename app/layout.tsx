@@ -15,8 +15,11 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "RepoIQ | Chat with any Codebase",
-  description: "AI-powered codebase intelligence tool using Gemini 2.0 Flash and RAG.",
+  title: "RepoIQ | Neural Codebase Explorer",
+  description: "AI-powered repository analysis and conversational indexer using RAG and Gemini 2.0.",
+  icons: {
+    icon: "/logo.webp",
+  },
 };
 
 export default function RootLayout({

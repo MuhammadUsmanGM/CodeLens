@@ -69,7 +69,7 @@ export function RepoInput({ onAnalyze, isAnalyzing }: RepoInputProps) {
           <button
             type="submit"
             disabled={isAnalyzing || !url.trim()}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 rounded-xl font-bold flex items-center gap-3 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-xl shadow-primary/10 group/btn overflow-hidden relative"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 rounded-xl font-bold flex items-center gap-3 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 shadow-xl shadow-primary/10 group/btn overflow-hidden relative cursor-pointer disabled:cursor-not-allowed"
           >
             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
             {isAnalyzing ? (

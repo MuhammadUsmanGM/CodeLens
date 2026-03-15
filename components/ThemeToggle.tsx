@@ -25,8 +25,8 @@ export function ThemeToggle({ className }: { className?: string }) {
       <button
         onClick={() => setTheme("light")}
         className={cn(
-          "p-1.5 rounded-full transition-all",
-          theme === "light" ? "bg-background text-primary shadow-sm" : "hover:bg-muted/30 text-muted-foreground"
+          "p-1.5 rounded-full transition-all cursor-pointer",
+          theme === "light" ? "bg-background text-primary shadow-sm" : "hover:bg-muted/30 text-muted-foreground hover:text-foreground"
         )}
         title="Light Mode"
       >
@@ -35,8 +35,8 @@ export function ThemeToggle({ className }: { className?: string }) {
       <button
         onClick={() => setTheme("dark")}
         className={cn(
-          "p-1.5 rounded-full transition-all",
-          theme === "dark" ? "bg-background text-primary shadow-sm" : "hover:bg-muted/30 text-muted-foreground"
+          "p-1.5 rounded-full transition-all cursor-pointer",
+          theme === "dark" ? "bg-background text-primary shadow-sm" : "hover:bg-muted/30 text-muted-foreground hover:text-foreground"
         )}
         title="Dark Mode"
       >
@@ -45,8 +45,8 @@ export function ThemeToggle({ className }: { className?: string }) {
       <button
         onClick={() => setTheme("system")}
         className={cn(
-          "px-2 py-1 text-xs font-medium rounded-full transition-all",
-          theme === "system" ? "bg-background text-primary shadow-sm" : "hover:bg-muted/30 text-muted-foreground"
+          "px-2 py-1 text-xs font-medium rounded-full transition-all cursor-pointer",
+          theme === "system" ? "bg-background text-primary shadow-sm" : "hover:bg-muted/30 text-muted-foreground hover:text-foreground"
         )}
       >
         Auto

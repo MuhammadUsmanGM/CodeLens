@@ -6,7 +6,7 @@ import { RepoInput } from "@/components/RepoInput";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ProcessingScreen, Step } from "@/components/ProcessingScreen";
 import { Toaster, toast } from "react-hot-toast";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Github, Linkedin } from "lucide-react";
 
 const INITIAL_STEPS: Step[] = [
   { id: "validating", label: "Security & Accessibility Check", status: "waiting" },
@@ -212,7 +212,7 @@ export default function Home() {
                     <button
                       key={repo}
                       onClick={() => router.push(`/chat/${encodeURIComponent(repo)}`)}
-                      className="group relative flex flex-col p-6 rounded-3xl bg-card/30 border border-white/5 hover:border-primary/40 hover:bg-card/50 transition-all duration-500 text-left overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/5"
+                      className="group relative flex flex-col p-6 rounded-3xl bg-card/30 border border-white/5 hover:border-primary/40 hover:bg-card/50 transition-all duration-500 text-left overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/5 cursor-pointer active:scale-95"
                     >
                       <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                         <ArrowRight size={14} className="text-primary" />
@@ -220,7 +220,7 @@ export default function Home() {
                       <span className="text-xs font-bold text-primary mb-2 uppercase tracking-tighter opacity-70 group-hover:opacity-100">Index Active</span>
                       <span className="text-lg font-semibold truncate text-foreground/90 group-hover:text-foreground">{repo}</span>
                       <div className="mt-4 flex items-center gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                        <div className="w-1 h-4 bg-primary/30 rounded-full" />
+                        <div className="w-1 h-4 bg-primary/30 rounded-full group-hover:bg-primary group-hover:h-6 transition-all" />
                         Explore Intelligence
                       </div>
                     </button>
@@ -229,11 +229,35 @@ export default function Home() {
               </div>
             )}
             
-            {/* Minimal Footer */}
-            <div className="flex flex-col items-center gap-2 opacity-30 mt-10">
-              <span className="text-[10px] font-bold tracking-[0.3em] uppercase">Built with Gemini 2.0 Flash</span>
-              <div className="h-4 w-px bg-primary/50" />
-            </div>
+            {/* Professional Footer */}
+            <footer className="w-full max-w-4xl pt-20 pb-10 flex flex-col items-center gap-8 border-t border-white/5 mt-auto">
+              <div className="flex items-center gap-6">
+                <a 
+                  href="https://github.com/MuhammadUsmanGM" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors cursor-pointer group"
+                >
+                  <Github size={16} className="group-hover:rotate-12 transition-transform" />
+                  GitHub
+                </a>
+                <div className="w-1 h-1 rounded-full bg-border" />
+                <a 
+                  href="https://www.linkedin.com/in/muhammad-usman-ai-dev" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors cursor-pointer group"
+                >
+                  <Linkedin size={16} className="group-hover:-rotate-12 transition-transform" />
+                  LinkedIn
+                </a>
+              </div>
+              
+              <div className="flex flex-col items-center gap-2 opacity-30">
+                <span className="text-[10px] font-bold tracking-[0.3em] uppercase">© {new Date().getFullYear()} REPOIQ • Neural Codebase Explorer</span>
+                <span className="text-[9px] font-medium tracking-[0.1em] uppercase">Powered by Gemini 2.0 Flash & Qdrant</span>
+              </div>
+            </footer>
           </>
         ) : (
           <div className="w-full max-w-3xl transform hover:scale-105 transition-transform duration-1000">
