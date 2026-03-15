@@ -6,7 +6,8 @@ import { RepoInput } from "@/components/RepoInput";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ProcessingScreen, Step } from "@/components/ProcessingScreen";
 import { Toaster, toast } from "sonner";
-import { ArrowRight, Github, Linkedin } from "lucide-react";
+import { ArrowRight, Github, Linkedin, Database } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const INITIAL_STEPS: Step[] = [
   { id: "validating", label: "Security & Accessibility Check", status: "waiting" },
@@ -196,7 +197,10 @@ export default function Home() {
         <ThemeToggle />
       </div>
 
-      <div className="relative z-10 container mx-auto px-6 py-20 flex flex-col items-center justify-center min-h-screen gap-20">
+      <div className={cn(
+        "relative z-10 container mx-auto px-4 md:px-6 py-12 md:py-20 flex flex-col items-center justify-center min-h-screen",
+        !isAnalyzing ? "gap-12 md:gap-20" : "gap-0"
+      )}>
         {!isAnalyzing ? (
           <>
             <RepoInput onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
@@ -264,7 +268,7 @@ export default function Home() {
             </footer>
           </>
         ) : (
-          <div className="w-full max-w-3xl transform hover:scale-105 transition-transform duration-1000">
+          <div className="w-full flex justify-center items-center">
             <ProcessingScreen steps={steps} progress={progress} repoName={repoName} />
           </div>
         )}
