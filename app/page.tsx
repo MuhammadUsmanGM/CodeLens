@@ -255,7 +255,7 @@ export default function Home() {
               
               <div className="flex flex-col items-center gap-2 opacity-30">
                 <span className="text-[10px] font-bold tracking-[0.3em] uppercase">© {new Date().getFullYear()} REPOIQ • Neural Codebase Explorer</span>
-                <span className="text-[9px] font-medium tracking-[0.1em] uppercase">Powered by Gemini 2.0 Flash & Qdrant</span>
+                <span className="text-[9px] font-medium tracking-[0.1em] uppercase">Privacy Focused • Performance Driven</span>
               </div>
             </footer>
           </>

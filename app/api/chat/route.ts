@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { retrieveChunks, buildContext, buildSystemPrompt } from "@/lib/rag";
 import { SYSTEM_PROMPT } from "@/lib/prompts";
+import { GEMINI_MODEL } from "@/lib/constants";
 
 export const maxDuration = 30;
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
     if (!apiKey) throw new Error("GOOGLE_API_KEY not set");
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash",
+      model: GEMINI_MODEL, 
       systemInstruction: `${SYSTEM_PROMPT}\n\n<retrieved_context>\n${context}\n</retrieved_context>`
     });
 

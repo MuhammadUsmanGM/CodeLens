@@ -24,3 +24,5 @@ export const GITHUB_FETCH_CONCURRENCY = 20;
 export const QDRANT_VECTOR_SIZE = 768; // Gemini embedding-001 size
 export const RAG_TOP_K = 5;
 export const QDRANT_UPSERT_BATCH_SIZE = 100;
+
+export const GEMINI_MODEL = "gemini-2.5-flash-lite";
