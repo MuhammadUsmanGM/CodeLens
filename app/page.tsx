@@ -23,19 +23,33 @@ export default function Home() {
   const router = useRouter();
 
   const handleAnalyze = async (url: string) => {
+    let toastId = "";
     try {
       // 1. Parse URL to get repoId
       const cleanUrl = url.replace(/^https?:\/\//, "").replace(/^github\.com\//, "");
       const parts = cleanUrl.split("/");
-      if (parts.length < 2) throw new Error("Invalid GitHub URL");
+      if (parts.length < 2) throw new Error("Please enter a valid GitHub repository URL");
       const repoId = `${parts[0]}/${parts[1]}`.toLowerCase();
       
+      toastId = toast.loading("Checking neural index...", {
+        style: {
+          borderRadius: '12px',
+          background: '#111',
+          color: '#fff',
+          border: '1px solid rgba(245, 166, 35, 0.2)'
+        }
+      });
+
       // 2. Check Cache First (The "Instant" Hack)
       const checkRes = await fetch(`/api/repo/${encodeURIComponent(repoId)}`);
       if (checkRes.ok) {
         const data = await checkRes.json();
         if (data.status === "ready") {
-          toast.success("Using existing index", { icon: "⚡" });
+          toast.success("Intelligence already established!", {
+            id: toastId,
+            icon: "⚡",
+            duration: 3000
+          });
           router.push(`/chat/${encodeURIComponent(repoId)}`);
           return;
         }
@@ -47,8 +61,14 @@ export default function Home() {
       setIsAnalyzing(true);
       setProgress(5);
       setSteps(INITIAL_STEPS);
+      
+      toast.dismiss(toastId);
+      toast.success("Identity verified. Starting neural mapping...", {
+        icon: "🧠",
+        duration: 4000
+      });
 
-      // 2. Start Ingestion
+      // 4. Start Ingestion Stream
       const response = await fetch("/api/ingest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -57,12 +77,11 @@ export default function Home() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to start ingestion");
+        throw new Error(error.error || "Neural mapping initialization failed");
       }
 
-      // 3. Parse Stream
       const reader = response.body?.getReader();
-      if (!reader) throw new Error("Connection failed");
+      if (!reader) throw new Error("Neural link failed to establish (Reader Error)");
 
       const decoder = new TextDecoder();
       let buffer = "";
@@ -72,7 +91,6 @@ export default function Home() {
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-        
         const lines = buffer.split("\n\n");
         buffer = lines.pop() || "";
 
@@ -86,26 +104,38 @@ export default function Home() {
               throw new Error(event.message);
             }
 
-            // Update UI based on step
             const stepOrder = ["validating", "fetching", "filtering", "chunking", "embedding", "complete"];
             const currentIdx = stepOrder.indexOf(event.step);
             
             updateProgress(event.step, currentIdx);
 
             if (event.step === "complete") {
-              toast.success("Identity established. Redirecting to chat...", { icon: "🔥" });
+              toast.success("Neural link established! Data indexed.", {
+                className: "bg-primary text-black font-bold",
+                icon: "🚀",
+                duration: 5000
+              });
               setTimeout(() => {
                 router.push(`/chat/${encodeURIComponent(event.repo_id)}`);
               }, 1500);
             }
           } catch (e) {
-            console.error("Parse Error:", e);
+            console.error("Neural Stream Parse Error:", e);
           }
         }
       }
     } catch (error: any) {
-      console.error("Analyze Error:", error);
-      toast.error(error.message || "Analysis failed");
+      console.error("Critical Ingestion Failure:", error);
+      toast.error(error.message || "A neural link interruption occurred", {
+        id: toastId,
+        style: {
+          borderRadius: '12px',
+          background: '#450a0a',
+          color: '#fecaca',
+          border: '1px solid #7f1d1d'
+        },
+        duration: 5000
+      });
       setIsAnalyzing(false);
       setSteps(INITIAL_STEPS);
     }
