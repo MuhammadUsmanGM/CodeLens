@@ -136,7 +136,7 @@ export async function fetchRepoAsZip(owner: string, repo: string): Promise<{ pat
     if (fileCount >= MAX_FILES) break;
 
     // Remove the root folder from path
-    const cleanPath = rootFolder ? path.replace(rootFolder, "") : path;
+    const cleanPath = rootFolder ? path.replace(rootFolder.name, "") : path;
     const lowerPath = cleanPath.toLowerCase();
 
     // Extension check
