@@ -36,7 +36,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       )}
     >
       <div className={cn(
-        "flex max-w-[95%] sm:max-w-[85%] md:max-w-[80%] gap-2 md:gap-4",
+        "flex max-w-[98%] sm:max-w-[85%] md:max-w-[80%] gap-2 md:gap-4 min-w-0",
         isBot ? "flex-row" : "flex-row-reverse"
       )}>
         {/* Avatar */}
@@ -50,9 +50,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         </div>
 
         {/* Content Container */}
-        <div className="flex flex-col gap-3 min-w-0">
+        <div className="flex flex-col gap-1 md:gap-3 min-w-0 flex-1">
           <div className={cn(
-            "relative px-4 py-3 md:px-6 md:py-4 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border transition-all",
+            "relative px-3 py-2.5 md:px-6 md:py-4 rounded-[1.25rem] md:rounded-[2rem] shadow-sm border transition-all overflow-hidden",
             isBot 
               ? "bg-card border-border text-foreground rounded-tl-none hover:shadow-md" 
               : "bg-primary text-primary-foreground border-primary rounded-tr-none shadow-primary/20 font-medium"
