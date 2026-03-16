@@ -101,17 +101,14 @@ export async function upsertPoints(repoId: string, points: QdrantPoint[], onProg
 export async function searchSimilar(repoId: string, queryVector: number[], topK: number) {
   const collectionName = getCollectionName(repoId);
   try {
+    // Request extra results to account for filtering out the metadata point
     const results = await getQdrantClient().search(collectionName, {
       vector: queryVector,
-      limit: topK,
+      limit: topK + 1,
       with_payload: true,
-      filter: {
-        must_not: [
-          { key: "type", match: { value: "metadata" } },
-        ],
-      },
     });
-    return results;
+    // Filter out the metadata point in JS
+    return results.filter(r => r.id !== METADATA_POINT_ID).slice(0, topK);
   } catch (error) {
     return [];
   }
@@ -168,23 +165,25 @@ export async function getRepoMetadata(repoId: string): Promise<RepoMetadata | nu
 export async function getAllChunks(repoId: string): Promise<RepoChunk[]> {
   const collectionName = getCollectionName(repoId);
   const chunks: RepoChunk[] = [];
-  let offset: string | number | null | undefined = undefined;
+  let offset: string | number | null = null;
 
-  // Scroll through all points, excluding the metadata point
+  // Scroll through all points, skip metadata point in JS
   while (true) {
-    const result = await getQdrantClient().scroll(collectionName, {
+    const scrollParams: Record<string, unknown> = {
       limit: 100,
-      offset,
       with_payload: true,
-      filter: {
-        must_not: [
-          { key: "type", match: { value: "metadata" } },
-        ],
-      },
-    });
+    };
+    if (offset !== null) {
+      scrollParams.offset = offset;
+    }
+
+    const result = await getQdrantClient().scroll(collectionName, scrollParams);
 
     for (const point of result.points) {
+      // Skip the metadata point
+      if (point.id === METADATA_POINT_ID) continue;
       const payload = point.payload as any;
+      if (!payload?.content || !payload?.filePath) continue;
       chunks.push({
         content: payload.content,
         filePath: payload.filePath,
@@ -193,7 +192,7 @@ export async function getAllChunks(repoId: string): Promise<RepoChunk[]> {
     }
 
     if (!result.next_page_offset) break;
-    offset = result.next_page_offset as string | number | undefined;
+    offset = result.next_page_offset as string | number;
   }
 
   return chunks;
@@ -202,24 +201,26 @@ export async function getAllChunks(repoId: string): Promise<RepoChunk[]> {
 export async function fetchFileChunks(repoId: string, filePath: string): Promise<RepoChunk[]> {
   const collectionName = getCollectionName(repoId);
   const chunks: RepoChunk[] = [];
-  let offset: string | number | null | undefined = undefined;
+  let offset: string | number | null = null;
 
   while (true) {
-    const result = await getQdrantClient().scroll(collectionName, {
+    const scrollParams: Record<string, unknown> = {
       limit: 100,
-      offset,
       with_payload: true,
       filter: {
         must: [
           { key: "filePath", match: { value: filePath } },
         ],
-        must_not: [
-          { key: "type", match: { value: "metadata" } },
-        ],
       },
-    });
+    };
+    if (offset !== null) {
+      scrollParams.offset = offset;
+    }
+
+    const result = await getQdrantClient().scroll(collectionName, scrollParams);
 
     for (const point of result.points) {
+      if (point.id === METADATA_POINT_ID) continue;
       const payload = point.payload as any;
       chunks.push({
         content: payload.content,
@@ -229,7 +230,7 @@ export async function fetchFileChunks(repoId: string, filePath: string): Promise
     }
 
     if (!result.next_page_offset) break;
-    offset = result.next_page_offset as string | number | undefined;
+    offset = result.next_page_offset as string | number;
   }
 
   return chunks;
