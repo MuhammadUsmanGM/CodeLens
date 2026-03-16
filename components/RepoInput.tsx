@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { Github, ArrowRight, Shield, Zap, Search } from "lucide-react";
+import { Github, ArrowRight, Shield, Zap, Search, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface RepoInputProps {
@@ -82,11 +82,16 @@ export function RepoInput({ onAnalyze, isAnalyzing }: RepoInputProps) {
             <div className="absolute inset-0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
             
             {isAnalyzing ? (
-              <Zap className="animate-[pulse_1s_infinite]" size={20} />
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                <span className="relative z-10 text-xs sm:text-sm">Mapping...</span>
+              </>
             ) : (
-              <ArrowRight size={20} />
+              <>
+                <ArrowRight size={20} />
+                <span className="relative z-10 text-sm">Map Repo</span>
+              </>
             )}
-            <span className="relative z-10 text-sm">Map Repo</span>
           </button>
         </form>
       </div>
