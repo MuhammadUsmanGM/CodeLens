@@ -153,19 +153,19 @@ export function ChatWindow({ repoId }: ChatWindowProps) {
   }, [repoId]);
 
   return (
-    <div className="flex flex-col h-full w-full max-w-4xl mx-auto bg-background">
+    <div className="flex flex-col h-full w-full max-w-4xl mx-auto bg-background overflow-hidden min-w-0">
       {/* Messages Area */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 md:px-6 py-10 scroll-smooth no-scrollbar"
+        className="flex-1 overflow-y-auto px-3 md:px-6 py-6 md:py-10 scroll-smooth no-scrollbar"
       >
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center px-8">
             <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mb-6">
               <Send size={32} />
             </div>
-            <h3 className="text-2xl font-display mb-2">Ready to Analyze</h3>
-            <p className="text-muted-foreground mb-10 max-w-sm">
+            <h3 className="text-xl md:text-2xl font-display mb-2">Ready to Analyze</h3>
+            <p className="text-sm text-muted-foreground mb-8 md:mb-10 max-w-sm">
               Ask anything about the codebase. I've indexed the files and I'm ready to help.
             </p>
             <SuggestedQuestions 
@@ -180,9 +180,9 @@ export function ChatWindow({ repoId }: ChatWindowProps) {
         ))}
         
         {isLoading && messages[messages.length - 1]?.content === "" && (
-          <div className="flex gap-4 items-center text-muted-foreground animate-pulse ml-14">
-            <Loader2 size={16} className="animate-spin" />
-            <span className="text-xs font-semibold uppercase tracking-widest">Thinking...</span>
+          <div className="flex gap-3 items-center text-muted-foreground animate-pulse ml-10 md:ml-14">
+            <Loader2 size={14} className="animate-spin" />
+            <span className="text-[10px] md:text-xs font-semibold uppercase tracking-widest">Thinking...</span>
           </div>
         )}
       </div>
@@ -207,7 +207,7 @@ export function ChatWindow({ repoId }: ChatWindowProps) {
             ref={inputRef}
             type="text"
             placeholder="Ask about the codebase..."
-            className="w-full bg-card border border-border focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl py-4 pl-6 pr-16 text-foreground outline-none transition-all shadow-sm"
+            className="w-full bg-card border border-border focus:border-primary/50 focus:ring-4 focus:ring-primary/10 rounded-2xl py-3 md:py-4 pl-4 md:pl-6 pr-14 md:pr-16 text-sm md:text-base text-foreground outline-none transition-all shadow-sm"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}

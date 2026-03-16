@@ -27,7 +27,7 @@ export function ProcessingScreen({ steps, progress, repoName }: ProcessingScreen
         Neural Synchronization In Progress
       </div>
 
-      <h2 className="text-3xl sm:text-5xl font-display text-center mb-12 tracking-tight text-foreground/90 break-all px-4">
+      <h2 className="text-2xl sm:text-5xl font-display text-center mb-12 tracking-tight text-foreground/90 break-words px-4">
         {repoName}
       </h2>
 
@@ -54,24 +54,24 @@ export function ProcessingScreen({ steps, progress, repoName }: ProcessingScreen
           <div 
             key={step.id}
             className={cn(
-              "flex items-center justify-between p-5 rounded-2xl border transition-all duration-500",
+              "flex items-center justify-between p-4 md:p-5 rounded-xl md:rounded-2xl border transition-all duration-500",
               step.status === "processing" 
                 ? "bg-white/5 dark:bg-zinc-900/60 border-primary/40 shadow-[0_20px_50px_rgba(0,0,0,0.2)] scale-[1.02] z-10" 
                 : "bg-black/5 dark:bg-white/[0.02] border-white/[0.05] opacity-60"
             )}
           >
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-3 md:gap-5">
               <div className={cn(
-                "h-10 w-10 shrink-0 rounded-xl flex items-center justify-center border transition-colors",
+                "h-8 w-8 md:h-10 md:w-10 shrink-0 rounded-lg md:rounded-xl flex items-center justify-center border transition-colors",
                 step.status === "complete" ? "bg-green-500/10 border-green-500/20 text-green-500" :
                 step.status === "processing" ? "bg-primary/20 border-primary/30 text-primary shadow-[0_0_15px_rgba(245,166,35,0.2)]" :
                 step.status === "error" ? "bg-destructive/10 border-destructive/20 text-destructive" :
                 "bg-zinc-500/5 border-white/[0.03] text-muted-foreground/30"
               )}>
-                {step.status === "complete" && <CheckCircle2 size={20} />}
-                {step.status === "processing" && <Loader2 size={20} className="animate-spin" />}
-                {step.status === "error" && <AlertCircle size={20} />}
-                {step.status === "waiting" && <div className="w-2 h-2 rounded-full bg-current opacity-20" />}
+                {step.status === "complete" && <CheckCircle2 className="w-[18px] h-[18px] md:w-5 md:h-5" />}
+                {step.status === "processing" && <Loader2 className="w-[18px] h-[18px] md:w-5 md:h-5 animate-spin" />}
+                {step.status === "error" && <AlertCircle className="w-[18px] h-[18px] md:w-5 md:h-5" />}
+                {step.status === "waiting" && <div className="w-1.5 h-1.5 rounded-full bg-current opacity-20" />}
               </div>
               <div className="flex flex-col">
                 <span className={cn(

@@ -26,12 +26,12 @@ export function SuggestedQuestions({ onSelect, isVisible }: SuggestedQuestionsPr
         <MessageSquare size={12} />
         Suggested Questions
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5 md:gap-2">
         {QUESTIONS.map((q, i) => (
           <button
             key={i}
             onClick={() => onSelect(q)}
-            className="px-4 py-2 text-sm bg-card hover:bg-muted/50 border border-border hover:border-primary/40 rounded-xl transition-all active:scale-95 text-foreground"
+            className="px-3 py-1.5 md:px-4 md:py-2 text-[11px] md:text-sm bg-card hover:bg-muted/50 border border-border hover:border-primary/40 rounded-lg md:rounded-xl transition-all active:scale-95 text-foreground text-left"
           >
             {q}
           </button>

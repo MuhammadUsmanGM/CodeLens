@@ -36,23 +36,23 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       )}
     >
       <div className={cn(
-        "flex max-w-[85%] md:max-w-[80%] gap-4",
+        "flex max-w-[95%] sm:max-w-[85%] md:max-w-[80%] gap-2 md:gap-4",
         isBot ? "flex-row" : "flex-row-reverse"
       )}>
         {/* Avatar */}
         <div className={cn(
-          "h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center border shadow-sm transition-transform group-hover:scale-110",
+          "hidden xs:flex h-8 w-8 md:h-10 md:w-10 shrink-0 rounded-xl md:rounded-2xl items-center justify-center border shadow-sm transition-transform group-hover:scale-110",
           isBot 
             ? "bg-gradient-to-br from-primary/20 to-amber-500/10 border-primary/20 text-primary" 
             : "bg-muted border-border text-muted-foreground"
         )}>
-          {isBot ? <Sparkles size={18} /> : <User size={18} />}
+          {isBot ? <Sparkles size={14} className="md:w-[18px] md:h-[18px]" /> : <User size={14} className="md:w-[18px] md:h-[18px]" />}
         </div>
 
         {/* Content Container */}
         <div className="flex flex-col gap-3 min-w-0">
           <div className={cn(
-            "relative px-6 py-4 rounded-[2rem] shadow-sm border transition-all",
+            "relative px-4 py-3 md:px-6 md:py-4 rounded-[1.5rem] md:rounded-[2rem] shadow-sm border transition-all",
             isBot 
               ? "bg-card border-border text-foreground rounded-tl-none hover:shadow-md" 
               : "bg-primary text-primary-foreground border-primary rounded-tr-none shadow-primary/20 font-medium"

@@ -23,27 +23,27 @@ export function RepoInput({ onAnalyze, isAnalyzing }: RepoInputProps) {
   return (
     <div className="flex flex-col items-center w-full max-w-4xl px-4 animate-in fade-in slide-in-from-bottom-12 duration-1000">
       {/* Premium Logo Presentation */}
-      <div className="relative mb-16 group">
+      <div className="relative mb-8 md:mb-16 group">
         <div className="absolute inset-[-20px] bg-primary/20 blur-[80px] rounded-full opacity-40 group-hover:opacity-70 transition-opacity duration-1000" />
-        <div className="relative p-1.5 bg-gradient-to-br from-white/10 via-white/5 to-transparent rounded-[3rem] border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.3)]">
+        <div className="relative p-1 bg-gradient-to-br from-white/10 via-white/5 to-transparent rounded-[2rem] md:rounded-[3rem] border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.3)]">
           <Image
             src="/logo.webp"
             alt="RepoIQ Logo"
-            width={160}
-            height={160}
-            className="rounded-[2.8rem] grayscale-[10%] group-hover:grayscale-0 transition-all duration-1000 brightness-110 shadow-inner"
+            width={120}
+            height={120}
+            className="rounded-[1.8rem] md:rounded-[2.8rem] grayscale-[10%] group-hover:grayscale-0 transition-all duration-1000 brightness-110 shadow-inner w-[100px] h-[100px] md:w-[160px] md:h-[160px]"
             priority
           />
         </div>
       </div>
 
       {/* High-Impact Hero Section */}
-      <div className="text-center space-y-6 mb-16 px-4">
-        <h1 className="text-4xl sm:text-7xl md:text-8xl font-display tracking-tighter text-foreground leading-[0.9] sm:leading-[0.85]">
+      <div className="text-center space-y-4 md:space-y-6 mb-8 md:mb-16 px-2 md:px-4">
+        <h1 className="text-3xl sm:text-7xl md:text-8xl font-display tracking-tighter text-foreground leading-[1] sm:leading-[0.85]">
           Neural <span className="text-primary italic">Intelligence</span> <br />
           <span className="opacity-40">for your</span> Codebase
         </h1>
-        <p className="text-muted-foreground/60 text-base md:text-xl max-w-2xl mx-auto font-medium leading-relaxed tracking-tight">
+        <p className="text-muted-foreground/60 text-sm md:text-xl max-w-2xl mx-auto font-medium leading-relaxed tracking-tight">
           Synchronize your repository with a high-performance RAG indexing engine. 
           Architecture discovery and semantic search at light speed.
         </p>
@@ -59,14 +59,14 @@ export function RepoInput({ onAnalyze, isAnalyzing }: RepoInputProps) {
           className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-2"
         >
           {/* Input Box */}
-          <div className="flex items-center flex-1 min-h-[64px] bg-white dark:bg-zinc-900/40 backdrop-blur-2xl border border-zinc-200 dark:border-white/[0.08] rounded-2xl sm:rounded-[2rem] px-5 group-focus-within:border-primary/40 transition-all duration-500 shadow-[0_8px_30px_rgba(0,0,0,0.05)] dark:shadow-[24px_24px_80px_rgba(0,0,0,0.6)]">
-            <div className="pr-4 text-primary/40">
-              <Github size={22} className="group-hover:text-primary group-focus-within:text-primary transition-colors duration-500" />
+          <div className="flex items-center flex-1 min-h-[56px] md:min-h-[64px] bg-white dark:bg-zinc-900/40 backdrop-blur-2xl border border-zinc-200 dark:border-white/[0.08] rounded-xl md:rounded-[2rem] px-4 md:px-5 group-focus-within:border-primary/40 transition-all duration-500 shadow-[0_8px_30px_rgba(0,0,0,0.05)] dark:shadow-[24px_24px_80px_rgba(0,0,0,0.6)]">
+            <div className="pr-3 md:pr-4 text-primary/40">
+              <Github size={20} className="md:w-[22px] md:h-[22px] group-hover:text-primary group-focus-within:text-primary transition-colors duration-500" />
             </div>
             <input
               type="text"
               placeholder="Paste Repository URL..."
-              className="flex-1 bg-transparent border-none outline-none text-foreground py-4 text-base md:text-lg placeholder:text-zinc-400 dark:placeholder:text-zinc-700 font-medium selection:bg-primary/30"
+              className="flex-1 bg-transparent border-none outline-none text-foreground py-3 md:py-4 text-sm md:text-lg placeholder:text-zinc-400 dark:placeholder:text-zinc-700 font-medium selection:bg-primary/30"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               disabled={isAnalyzing}
