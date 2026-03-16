@@ -33,9 +33,11 @@ export default function Home() {
   }, []);
 
   const saveToRecent = (repoId: string) => {
-    const updated = [repoId, ...recentRepos.filter(r => r !== repoId)].slice(0, 5);
-    setRecentRepos(updated);
-    localStorage.setItem("repoiq_recent", JSON.stringify(updated));
+    setRecentRepos(prev => {
+      const updated = [repoId, ...prev.filter(r => r !== repoId)].slice(0, 5);
+      localStorage.setItem("repoiq_recent", JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleAnalyze = async (url: string) => {
@@ -76,6 +78,7 @@ export default function Home() {
       if (checkRes.ok) {
         const data = await checkRes.json();
         if (data.status === "ready") {
+          saveToRecent(repoId);
           toast.success("Intelligence established!", {
             id: toastId,
             duration: 3000
@@ -223,7 +226,7 @@ export default function Home() {
       </div>
 
       <div className={cn(
-        "relative z-10 container mx-auto px-4 md:px-6 py-12 md:py-20 flex flex-col items-center justify-center min-h-screen",
+        "relative z-10 container mx-auto px-4 md:px-6 py-12 md:py-20 flex flex-col items-center justify-start md:justify-center min-h-screen",
         !isAnalyzing ? "gap-12 md:gap-20" : "gap-0"
       )}>
         {!isAnalyzing ? (
