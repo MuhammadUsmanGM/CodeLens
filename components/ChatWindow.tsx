@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { Send, Loader2, AlertCircle } from "lucide-react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Send, Loader2, AlertCircle, Trash2 } from "lucide-react";
 import { ChatMessage, ChatSSEEvent } from "@/types";
 import { MessageBubble } from "./MessageBubble";
 import { SuggestedQuestions } from "./SuggestedQuestions";
 import { cn } from "@/lib/utils";
+import { loadChatHistory, saveChatHistory, clearChatHistory } from "@/hooks/useChatHistory";
 
 interface ChatWindowProps {
   repoId: string;
 }
 
 export function ChatWindow({ repoId }: ChatWindowProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadChatHistory(repoId));
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const shouldSaveRef = useRef(true);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +108,7 @@ export function ChatWindow({ repoId }: ChatWindowProps) {
                 return updated;
               });
             } else if (event === "error") {
+              shouldSaveRef.current = false;
               // Remove empty bot placeholder on error
               setMessages(prev => {
                 const lastMsg = prev[prev.length - 1];
@@ -121,6 +124,7 @@ export function ChatWindow({ repoId }: ChatWindowProps) {
         }
       }
     } catch (err: any) {
+      shouldSaveRef.current = false;
       // Remove empty bot placeholder on fetch error
       setMessages(prev => {
         const lastMsg = prev[prev.length - 1];
@@ -132,8 +136,21 @@ export function ChatWindow({ repoId }: ChatWindowProps) {
       setError(err.message || "Failed to get response");
     } finally {
       setIsLoading(false);
+      if (shouldSaveRef.current) {
+        setMessages(prev => {
+          saveChatHistory(repoId, prev);
+          return prev;
+        });
+      }
+      shouldSaveRef.current = true;
     }
   };
+
+  const handleClearChat = useCallback(() => {
+    clearChatHistory(repoId);
+    setMessages([]);
+    setError(null);
+  }, [repoId]);
 
   return (
     <div className="flex flex-col h-full w-full max-w-4xl mx-auto bg-background">
@@ -207,9 +224,21 @@ export function ChatWindow({ repoId }: ChatWindowProps) {
             )}
           </button>
         </form>
-        <p className="text-[10px] text-center text-muted-foreground mt-3 uppercase tracking-widest font-bold opacity-50">
-          RepoIQ can make mistakes. Verify important information.
-        </p>
+        <div className="flex items-center justify-center gap-3 mt-3">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-50">
+            RepoIQ can make mistakes. Verify important information.
+          </p>
+          {messages.length > 0 && (
+            <button
+              onClick={handleClearChat}
+              className="text-[10px] text-muted-foreground/50 hover:text-destructive uppercase tracking-widest font-bold transition-colors flex items-center gap-1"
+              title="Clear chat history"
+            >
+              <Trash2 size={10} />
+              Clear
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

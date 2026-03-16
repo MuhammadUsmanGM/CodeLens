@@ -11,6 +11,8 @@ const BASE_INSTRUCTIONS = `
 6. Never fabricate file paths or logic not in context.
 7. If asked anything unrelated, respond:
    "I'm only able to answer questions about the indexed repository."
+8. When the source content contains raw markdown (badges, shield.io URLs, image links, HTML), interpret and summarize the MEANING — do NOT repeat the raw markdown syntax, URLs, or badge code in your answer. Present information as clean readable text.
+9. If the repository only contains non-code files (e.g. only a README), adapt your answers accordingly — describe what the README says rather than saying "no structure found."
 </instructions>
 
 <output_format>
@@ -18,6 +20,7 @@ const BASE_INSTRUCTIONS = `
 - Support with specific file path references
 - End with a code snippet if relevant
 - Do NOT output a raw sources section — the UI handles this
+- Do NOT output raw markdown badge URLs, shield.io image links, or HTML img tags — summarize their content as clean text instead
 </output_format>`;
 
 export function buildHybridPrompt(context: string, fileTree: string, mode: "full" | "rag"): string {

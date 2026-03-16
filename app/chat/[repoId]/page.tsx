@@ -7,6 +7,7 @@ import { ChatWindow } from "@/components/ChatWindow";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { RepoInfo } from "@/types";
 import { Toaster, toast } from "sonner";
+import { clearChatHistory } from "@/hooks/useChatHistory";
 
 export default function ChatPage() {
   const params = useParams();
@@ -48,9 +49,10 @@ export default function ChatPage() {
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this indexed repository?")) return;
-    
+
     try {
       await fetch(`/api/repo/${encodeURIComponent(repoId)}`, { method: "DELETE" });
+      clearChatHistory(repoId);
       toast.success("Repository data cleared");
       router.push("/");
     } catch (error) {
