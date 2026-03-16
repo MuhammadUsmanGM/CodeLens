@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error: any) {
+    console.error("[chat] Error:", error.message, error.stack);
     return Response.json({ error: error.message }, { status: 500 });
   }
 }

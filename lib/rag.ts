@@ -47,7 +47,15 @@ export async function retrieveHybrid(repoId: string, message: string): Promise<H
   const metadata = await getRepoMetadata(repoId);
 
   if (!metadata) {
-    throw new Error("No indexed data found for this repository. Please re-index it from the home page.");
+    // Metadata missing — collection exists but was indexed before metadata storage was added.
+    // Fall back to RAG mode with no file tree.
+    console.warn("[rag] No metadata found for", repoId, "— falling back to RAG mode");
+    const ragChunks = await retrieveByVector(repoId, message, RAG_TOP_K);
+    if (ragChunks.length === 0) {
+      throw new Error("No indexed data found for this repository. Please re-index it from the home page.");
+    }
+    const sources = Array.from(new Set(ragChunks.map(c => c.filePath)));
+    return { chunks: ragChunks, fileTree: "(file tree unavailable — re-index for full features)", mode: "rag" as const, sources };
   }
 
   const fileTree = metadata.fileTree;
