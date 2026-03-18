@@ -169,10 +169,11 @@ export default function Home() {
         buffer = lines.pop() || "";
 
         for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
+          const cleanLine = line.trim();
+          if (!cleanLine.startsWith("data: ")) continue;
 
           try {
-            const event: any = JSON.parse(line.replace("data: ", ""));
+            const event: any = JSON.parse(cleanLine.replace("data: ", ""));
 
             if (event.step === "error") {
               streamError = event.message || "An unknown error occurred";
@@ -180,19 +181,33 @@ export default function Home() {
             }
 
             const stepOrder = ["validating", "fetching", "filtering", "chunking", "embedding", "complete"];
+            // Ensure even the "complete" step updates UI before redirect
             const currentIdx = stepOrder.indexOf(event.step);
-
             updateProgress(event.step, currentIdx, event.percent, event.detail);
 
             if (event.step === "complete") {
-              saveToRecent(event.repo_id);
+              const repoId = event.repo_id;
+              if (!repoId) {
+                console.error("Neural completion event missing repoId", event);
+                streamError = "Neural link completed but repository ID is missing.";
+                break;
+              }
+
+              saveToRecent(repoId);
               toast.success("Neural link established! Data indexed.", {
                 duration: 5000
               });
-              router.push(`/chat/${encodeURIComponent(event.repo_id)}`);
+
+              // Small delay to ensure state and toast are visible before transition
+              setTimeout(() => {
+                router.push(`/chat/${encodeURIComponent(repoId)}`);
+              }, 800);
+              
+              // We return here to stop the processing loop
+              return;
             }
           } catch (e) {
-            // JSON parse error on SSE event — skip malformed event
+            console.error("Neural SSE Parse Error:", e, "Line:", line);
           }
         }
 
