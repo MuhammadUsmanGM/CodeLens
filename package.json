@@ -1,7 +1,26 @@
 {
-  "name": "lens-ai",
-  "version": "0.1.0",
+  "name": "codelens-ai",
+  "version": "1.0.0",
   "description": "AI-powered codebase analysis — index any repo and chat with it locally",
+  "author": "Muhammad Usman <https://github.com/MuhammadUsmanGM>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MuhammadUsmanGM/CodeLens.git"
+  },
+  "homepage": "https://github.com/MuhammadUsmanGM/CodeLens#readme",
+  "keywords": [
+    "ai",
+    "rag",
+    "codebase-analysis",
+    "gemini",
+    "qdrant",
+    "nextjs",
+    "developer-tools"
+  ],
+  "engines": {
+    "node": ">=18.17.0"
+  },
   "bin": {
     "lens": "./bin/codelens.mjs"
   },
@@ -35,6 +54,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "@xenova/transformers": "^2.17.2",
     "ai": "^6.0.116",
+    "chalk": "^5.6.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.36.0",
     "jszip": "^3.10.1",

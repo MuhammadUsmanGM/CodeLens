@@ -7,10 +7,21 @@ import { createInterface } from "readline";
 import { execSync, spawn } from "child_process";
 import { fileURLToPath } from "url";
 
+import chalk from "chalk";
+
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const PKG_ROOT = join(__dirname, "..");
 const CODELENS_DIR = join(homedir(), ".codelens");
 const ENV_FILE = join(CODELENS_DIR, ".env");
+
+const LENS_BANNER = `
+  ██╗     ███████╗███╗   ██╗███████╗
+  ██║     ██╔════╝████╗  ██║██╔════╝
+  ██║     █████╗  ██╔██╗ ██║███████╗
+  ██║     ██╔══╝  ██║╚██╗██║╚════██║
+  ███████╗███████╗██║ ╚████║███████║
+  ╚══════╝╚══════╝╚═╝  ╚═══╝╚══════╝
+`;
 
 const REQUIRED_VARS = [
   { key: "GOOGLE_API_KEY", label: "Google Gemini API Key" },
@@ -117,15 +128,18 @@ function openBrowser(url) {
 // --- Main ---
 
 async function main() {
+  console.log(chalk.hex("#FFB300")(LENS_BANNER));
+  console.log(chalk.bold.hex("#FFB300")("  THE NEURAL BRIDGE BETWEEN DEVELOPER & CODEBASE\n"));
+
   await ensureEnv();
   ensureBuild();
 
   const port = process.env.PORT || 3000;
 
-  console.log("  ╔══════════════════════════════════════╗");
-  console.log(`  ║  CodeLens running → http://localhost:${port}  ║`);
-  console.log("  ╚══════════════════════════════════════╝");
-  console.log("\n  Press Ctrl+C to stop.\n");
+  console.log(chalk.cyan("  ╔══════════════════════════════════════╗"));
+  console.log(chalk.cyan(`  ║  CodeLens running → http://localhost:${port}  ║`));
+  console.log(chalk.cyan("  ╚══════════════════════════════════════╝"));
+  console.log(chalk.dim("\n  Press Ctrl+C to stop.\n"));
 
   const server = spawn("npx", ["next", "start", "-p", String(port)], {
     cwd: PKG_ROOT,
@@ -140,7 +154,7 @@ async function main() {
 
   // Handle Ctrl+C gracefully
   process.on("SIGINT", () => {
-    console.log("\n  Shutting down CodeLens...\n");
+    console.log(chalk.yellow("\n\n  Shutting down CodeLens...\n"));
     server.kill("SIGINT");
   });
 }
