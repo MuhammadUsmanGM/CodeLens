@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Hybrid retrieval — full context for small repos, RAG for large
-    const { chunks, fileTree, mode, sources } = await retrieveHybrid(repo_id, message);
+    //    Pass chat history for context-aware query rewriting
+    const { chunks, fileTree, mode, sources } = await retrieveHybrid(repo_id, message, history);
     const context = buildContext(chunks);
 
     // 2. Build mode-aware prompt

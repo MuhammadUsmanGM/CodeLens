@@ -11,20 +11,52 @@ export interface GitTreeItem {
   url: string;
 }
 
-export function parseGithubUrl(url: string) {
+export interface ParsedGithubUrl {
+  owner: string;
+  repo: string;
+  ref?: string; // branch name or tag
+}
+
+export function parseGithubUrl(url: string): ParsedGithubUrl {
   // Supports:
   // https://github.com/owner/repo
   // github.com/owner/repo
   // owner/repo
-  const cleanUrl = url.replace(/^https?:\/\//, "").replace(/^github\.com\//, "");
-  const parts = cleanUrl.split("/");
-  
+  // owner/repo@branch
+  // owner/repo#tag
+  // https://github.com/owner/repo/tree/branch-name
+  let cleanUrl = url.replace(/^https?:\/\//, "").replace(/^github\.com\//, "");
+
+  // Handle /tree/branch-name in full GitHub URLs
+  let ref: string | undefined;
+  const treeParts = cleanUrl.split("/tree/");
+  if (treeParts.length === 2) {
+    cleanUrl = treeParts[0];
+    ref = treeParts[1].replace(/\/$/, ""); // trim trailing slash
+  }
+
+  // Handle @branch syntax
+  if (!ref && cleanUrl.includes("@")) {
+    const [base, branchPart] = cleanUrl.split("@");
+    cleanUrl = base;
+    ref = branchPart;
+  }
+
+  // Handle #tag syntax
+  if (!ref && cleanUrl.includes("#")) {
+    const [base, tagPart] = cleanUrl.split("#");
+    cleanUrl = base;
+    ref = tagPart;
+  }
+
+  const parts = cleanUrl.split("/").filter(Boolean);
+
   if (parts.length < 2) {
     throw new Error("Invalid GitHub URL format. Use owner/repo");
   }
 
   const [owner, repo] = parts;
-  return { owner, repo };
+  return { owner, repo: repo.replace(/\.git$/, ""), ref: ref || undefined };
 }
 
 async function fetchGithub(path: string) {
@@ -152,25 +184,34 @@ function getFilePriority(path: string): number {
   return 5;
 }
 
-export async function fetchRepoAsZip(owner: string, repo: string): Promise<{ path: string; content: string }[]> {
+export async function fetchRepoAsZip(owner: string, repo: string, ref?: string): Promise<{ path: string; content: string }[]> {
   const token = getGithubToken();
   const headers: HeadersInit = {
     "Accept": "application/vnd.github.v3+json",
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  // Get default branch with proper error handling
-  const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
-  if (!repoResponse.ok) {
-    if (repoResponse.status === 404) throw new Error("Repository not found or is private.");
-    if (repoResponse.status === 403) throw new Error("GitHub API rate limit exceeded.");
-    throw new Error(`GitHub API error: ${repoResponse.statusText}`);
+  // Resolve the ref to download
+  let targetRef = ref;
+  if (!targetRef) {
+    // Get default branch with proper error handling
+    const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
+    if (!repoResponse.ok) {
+      if (repoResponse.status === 404) throw new Error("Repository not found or is private.");
+      if (repoResponse.status === 403) throw new Error("GitHub API rate limit exceeded.");
+      throw new Error(`GitHub API error: ${repoResponse.statusText}`);
+    }
+    const repoData = await repoResponse.json();
+    targetRef = repoData.default_branch || "main";
   }
-  const repoData = await repoResponse.json();
-  const defaultBranch = repoData.default_branch || "main";
 
-  const response = await fetch(`https://github.com/${owner}/${repo}/archive/refs/heads/${defaultBranch}.zip`);
-  if (!response.ok) throw new Error("Failed to download repository ZIP.");
+  // Try as branch first, then as tag
+  let response = await fetch(`https://github.com/${owner}/${repo}/archive/refs/heads/${targetRef}.zip`);
+  if (!response.ok && ref) {
+    // Might be a tag instead of a branch
+    response = await fetch(`https://github.com/${owner}/${repo}/archive/refs/tags/${targetRef}.zip`);
+  }
+  if (!response.ok) throw new Error(`Failed to download repository ZIP for ref "${targetRef}". Check if the branch or tag exists.`);
 
   // Guard against OOM: reject ZIPs larger than 200MB
   const contentLength = response.headers.get("content-length");

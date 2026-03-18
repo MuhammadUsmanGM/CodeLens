@@ -2,19 +2,101 @@
 
 import { embedQuery } from "./embedder";
 import { searchSimilar, getRepoMetadata, getAllChunks, fetchFileChunks } from "./qdrant";
-import { RAG_TOP_K, FULL_CONTEXT_TOKEN_THRESHOLD } from "./constants";
-import { RepoChunk, HybridRetrievalResult } from "@/types";
+import { RAG_TOP_K, RAG_CANDIDATE_MULTIPLIER, FULL_CONTEXT_TOKEN_THRESHOLD, GEMINI_MODEL } from "./constants";
+import { RepoChunk, HybridRetrievalResult, ChatMessage } from "@/types";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getGoogleApiKey } from "./env";
 
-/** Original RAG retrieval — used in large repo mode */
+/** Rewrite a follow-up message into a standalone search query using chat history */
+async function buildSearchQuery(message: string, history?: ChatMessage[]): Promise<string> {
+  // No history or first message — use as-is
+  if (!history || history.length === 0) return message;
+
+  // Only use the last 4 messages for context (keeps it fast)
+  const recent = history.slice(-4);
+  const hasContext = recent.some(m => m.role === "user");
+  if (!hasContext) return message;
+
+  try {
+    const genAI = new GoogleGenerativeAI(getGoogleApiKey());
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+
+    const conversationBlock = recent
+      .map(m => `${m.role === "user" ? "User" : "Assistant"}: ${m.content.slice(0, 300)}`)
+      .join("\n");
+
+    const result = await model.generateContent(
+      `Given this conversation about a code repository:\n\n${conversationBlock}\n\nThe user now asks: "${message}"\n\nRewrite the user's latest message as a single standalone search query that captures the full intent (resolve pronouns like "it", "that", "this function" using conversation context). Output ONLY the rewritten query, nothing else. If the message is already standalone, return it unchanged.`
+    );
+
+    const rewritten = result.response.text().trim();
+    // Sanity check — if the model returned something too long or empty, fall back
+    if (rewritten.length > 0 && rewritten.length < 500) return rewritten;
+  } catch (error) {
+    console.warn("[rag] Query rewrite failed, using original message:", error);
+  }
+
+  return message;
+}
+
+/** Score and re-rank chunks by relevance to the query using the LLM */
+async function rerankChunks(query: string, chunks: RepoChunk[], topK: number): Promise<RepoChunk[]> {
+  if (chunks.length <= topK) return chunks;
+
+  try {
+    const genAI = new GoogleGenerativeAI(getGoogleApiKey());
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+
+    // Build a numbered list of chunk summaries for the LLM
+    const chunkSummaries = chunks
+      .map((c, i) => `[${i}] ${c.filePath}: ${c.content.slice(0, 200)}`)
+      .join("\n\n");
+
+    const result = await model.generateContent(
+      `You are a code search re-ranker. Given a user query and a list of code chunks, return the indices of the ${topK} most relevant chunks in order of relevance (most relevant first).\n\nQuery: "${query}"\n\nChunks:\n${chunkSummaries}\n\nReturn ONLY a JSON array of indices, e.g. [3, 0, 7, 1, ...]. No explanation.`
+    );
+
+    const text = result.response.text().trim();
+    // Extract JSON array from response (handle markdown code blocks)
+    const jsonMatch = text.match(/\[[\d,\s]+\]/);
+    if (jsonMatch) {
+      const indices: number[] = JSON.parse(jsonMatch[0]);
+      const reranked: RepoChunk[] = [];
+      const seen = new Set<number>();
+
+      for (const idx of indices) {
+        if (idx >= 0 && idx < chunks.length && !seen.has(idx)) {
+          reranked.push(chunks[idx]);
+          seen.add(idx);
+          if (reranked.length >= topK) break;
+        }
+      }
+
+      // If we got enough results, use them; otherwise fall back to original order
+      if (reranked.length >= topK * 0.5) return reranked;
+    }
+  } catch (error) {
+    console.warn("[rag] Re-ranking failed, using vector order:", error);
+  }
+
+  // Fallback: return the top-K in original vector similarity order
+  return chunks.slice(0, topK);
+}
+
+/** Vector retrieval — fetches extra candidates for re-ranking */
 async function retrieveByVector(repoId: string, query: string, topK = RAG_TOP_K): Promise<RepoChunk[]> {
+  const candidateCount = topK * RAG_CANDIDATE_MULTIPLIER;
   const vector = await embedQuery(query);
-  const hits = await searchSimilar(repoId, vector, topK);
+  const hits = await searchSimilar(repoId, vector, candidateCount);
 
-  return hits.map(hit => ({
+  const candidates: RepoChunk[] = hits.map(hit => ({
     content: (hit.payload as any).content,
     filePath: (hit.payload as any).filePath,
     language: (hit.payload as any).language,
   }));
+
+  // Re-rank candidates down to topK
+  return rerankChunks(query, candidates, topK);
 }
 
 /** Detect if user mentions specific file paths in their query */
@@ -24,14 +106,9 @@ function detectMentionedFiles(message: string, fileTree: string): string[] {
 
   return paths.filter(p => {
     const lowerPath = p.toLowerCase();
-    // Only match full path or path with at least one directory separator
-    // This avoids false positives on bare filenames like "index.ts"
     if (lowerMessage.includes(lowerPath)) return true;
     const fileName = lowerPath.split("/").pop() || "";
-    // Only match bare filename if it contains a distinguishing name (not generic)
-    // and the user used a path-like reference (with / or .)
     if (fileName.length > 0 && lowerPath.includes("/")) {
-      // Require at least parent/filename match to avoid matching "index.ts" everywhere
       const parts = lowerPath.split("/");
       if (parts.length >= 2) {
         const parentAndFile = parts.slice(-2).join("/");
@@ -43,14 +120,15 @@ function detectMentionedFiles(message: string, fileTree: string): string[] {
 }
 
 /** Main hybrid retrieval — routes to full context or RAG based on repo size */
-export async function retrieveHybrid(repoId: string, message: string): Promise<HybridRetrievalResult> {
+export async function retrieveHybrid(repoId: string, message: string, history?: ChatMessage[]): Promise<HybridRetrievalResult> {
   const metadata = await getRepoMetadata(repoId);
 
+  // Build a context-aware search query from chat history
+  const searchQuery = await buildSearchQuery(message, history);
+
   if (!metadata) {
-    // Metadata missing — collection exists but was indexed before metadata storage was added.
-    // Fall back to RAG mode with no file tree.
     console.warn("[rag] No metadata found for", repoId, "— falling back to RAG mode");
-    const ragChunks = await retrieveByVector(repoId, message, RAG_TOP_K);
+    const ragChunks = await retrieveByVector(repoId, searchQuery, RAG_TOP_K);
     if (ragChunks.length === 0) {
       throw new Error("No indexed data found for this repository. Please re-index it from the home page.");
     }
@@ -72,8 +150,8 @@ export async function retrieveHybrid(repoId: string, message: string): Promise<H
     return { chunks, fileTree, mode: "full", sources };
   }
 
-  // Mode B: RAG for large repos
-  const ragChunks = await retrieveByVector(repoId, message, RAG_TOP_K);
+  // Mode B: RAG for large repos (with re-ranking + context-aware query)
+  const ragChunks = await retrieveByVector(repoId, searchQuery, RAG_TOP_K);
 
   if (ragChunks.length === 0) {
     throw new Error("No relevant code found. Try rephrasing your question or ask about a specific file.");

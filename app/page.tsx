@@ -48,13 +48,37 @@ export default function Home() {
 
     let toastId: string | number = "";
     try {
-      // 1. Parse & validate URL
-      const cleanUrl = url.replace(/^https?:\/\//, "").replace(/^github\.com\//, "");
+      // 1. Parse & validate URL (supports owner/repo, owner/repo@branch, owner/repo#tag, full GitHub URLs with /tree/branch)
+      let cleanUrl = url.replace(/^https?:\/\//, "").replace(/^github\.com\//, "");
+      let ref: string | undefined;
+
+      // Handle /tree/branch-name in full GitHub URLs
+      const treeParts = cleanUrl.split("/tree/");
+      if (treeParts.length === 2) {
+        cleanUrl = treeParts[0];
+        ref = treeParts[1].replace(/\/$/, "");
+      }
+
+      // Handle @branch syntax
+      if (!ref && cleanUrl.includes("@")) {
+        const [base, branchPart] = cleanUrl.split("@");
+        cleanUrl = base;
+        ref = branchPart;
+      }
+
+      // Handle #tag syntax
+      if (!ref && cleanUrl.includes("#")) {
+        const [base, tagPart] = cleanUrl.split("#");
+        cleanUrl = base;
+        ref = tagPart;
+      }
+
       const parts = cleanUrl.split("/").filter(Boolean);
       if (parts.length < 2 || !/^[a-zA-Z0-9._-]+$/.test(parts[0]) || !/^[a-zA-Z0-9._-]+$/.test(parts[1])) {
-        throw new Error("Please enter a valid GitHub repository URL (e.g. github.com/owner/repo)");
+        throw new Error("Please enter a valid GitHub repository URL (e.g. github.com/owner/repo or owner/repo@branch)");
       }
-      const repoId = `${parts[0]}/${parts[1].replace(/\.git$/, "")}`.toLowerCase();
+      const baseId = `${parts[0]}/${parts[1].replace(/\.git$/, "")}`.toLowerCase();
+      const repoId = ref ? `${baseId}@${ref.toLowerCase()}` : baseId;
 
       toastId = toast.loading("Checking neural index...", {
         style: {

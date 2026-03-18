@@ -30,12 +30,15 @@ export async function POST(req: NextRequest) {
       try {
         // 1. Parse & Validate
         sendStep({ step: "validating", message: "Verifying repository identity..." });
-        const { owner, repo } = parseGithubUrl(github_url);
-        const repoId = `${owner}/${repo}`.toLowerCase();
+        const { owner, repo, ref } = parseGithubUrl(github_url);
+        // Include ref in repoId so different branches get separate indexes
+        const repoId = ref
+          ? `${owner}/${repo}@${ref}`.toLowerCase()
+          : `${owner}/${repo}`.toLowerCase();
 
         // 2. Download repo as ZIP
-        sendStep({ step: "fetching", message: "Downloading repository..." });
-        const filesWithContent = await fetchRepoAsZip(owner, repo);
+        sendStep({ step: "fetching", message: ref ? `Downloading branch/tag: ${ref}...` : "Downloading repository..." });
+        const filesWithContent = await fetchRepoAsZip(owner, repo, ref);
 
         if (filesWithContent.length === 0) {
           throw new Error("No supported code files found in the repository.");
