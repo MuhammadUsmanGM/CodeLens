@@ -5,14 +5,36 @@
 # CODELENS
 ### The Neural Bridge Between Developer & Codebase
 
-[![Neural Architecture](https://img.shields.io/badge/Architecture-Neural_RAG-amber?style=for-the-badge&logo=brain&logoColor=white)]()
-[![Intelligence](https://img.shields.io/badge/Intelligence-Gemini_Flash-white?style=for-the-badge&logo=googlegemini&logoColor=8E75B2)]()
+[![NPM Version](https://img.shields.io/npm/v/codelens-ai?style=for-the-badge&color=CB3837&logo=npm)]()
+[![Intelligence](https://img.shields.io/badge/Intelligence-Gemini_Flash--Lite-white?style=for-the-badge&logo=googlegemini&logoColor=8E75B2)]()
 [![Performance](https://img.shields.io/badge/Performance-Vector_Accelerated-black?style=for-the-badge&logo=qdrant&logoColor=FF4B4B)]()
 [![Status](https://img.shields.io/badge/Status-Operational-00FF00?style=for-the-badge)]()
 
 **CodeLens is not just a tool; it is a cognitive layer for software engineering.** By synthesizing vast amounts of repository data into a neural index, it enables developers to transcend traditional keyword search and engage in meaningful, semantic dialogue with their own creation.
 
 </div>
+
+---
+
+## 🚀 Deployment
+
+CodeLens is distributed as a global CLI tool, allowing you to launch your private architectural autopilot anywhere.
+
+### Option 1: Zero-Installation (Recommended)
+Launch CodeLens instantaneously using `npx`:
+```bash
+npx codelens-ai
+```
+
+### Option 2: Global Installation
+For high-frequency use, install the binary globally:
+```bash
+npm install -g codelens-ai
+```
+Then simply execute:
+```bash
+lens
+```
 
 ---
 
@@ -47,11 +69,9 @@ Query your codebase like you would a senior architect.
 
 ## ⚙️ The Ecosystem
 
-CodeLens represents a convergence of state-of-the-art technologies, orchestrating a seamless flow from raw code to neural intelligence.
-
 | Pillar | Technology | Role |
 | :--- | :--- | :--- |
-| **Cognition** | Gemini Flash-Lite | The reasoning engine providing lightspeed architectural inference. |
+| **Cognition** | Gemini Next-Gen | The reasoning engine providing lightspeed architectural inference. |
 | **Memory** | Qdrant Vector DB | High-performance neural retrieval for sub-millisecond context delivery. |
 | **Interface** | Next.js & Framer | A premium, glassmorphic UI designed for high-focus engineering. |
 | **Connectivity** | GitHub API | Real-time synchronization with the world's most critical codebase host. |
