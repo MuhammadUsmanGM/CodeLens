@@ -1,5 +1,5 @@
 {
-  "name": "codelens-ai",
+  "name": "lens-ai",
   "version": "0.1.0",
   "description": "AI-powered codebase analysis — index any repo and chat with it locally",
   "bin": {
