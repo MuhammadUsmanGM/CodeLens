@@ -21,9 +21,13 @@ export function getQdrantClient() {
 }
 
 export function getCollectionName(repoId: string) {
-  // Collection names must be alphanumeric/underscores/dashes
-  const safeId = repoId.replace(/[^a-zA-Z0-9_-]/g, "_");
-  return `repo_${safeId}`;
+  // Use a short hash to guarantee unique, collision-free collection names
+  // This avoids lossy character replacement where e.g. "owner/repo@main" and "owner/repo_main" could collide
+  const crypto = require("crypto");
+  const hash = crypto.createHash("sha256").update(repoId).digest("hex").slice(0, 12);
+  // Keep a human-readable prefix (alphanumeric only) for easier debugging
+  const prefix = repoId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 30);
+  return `repo_${prefix}_${hash}`;
 }
 
 export async function collectionExists(repoId: string): Promise<boolean> {

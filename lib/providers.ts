@@ -213,11 +213,11 @@ async function fetchGithubRepo(owner: string, repo: string, ref?: string): Promi
 
   // Try branch, then tag
   let files = await fetchAndExtractZip(
-    `https://github.com/${owner}/${repo}/archive/refs/heads/${targetRef}.zip`, {}
+    `https://github.com/${owner}/${repo}/archive/refs/heads/${targetRef}.zip`, headers
   );
   if (files.length === 0 && ref) {
     files = await fetchAndExtractZip(
-      `https://github.com/${owner}/${repo}/archive/refs/tags/${targetRef}.zip`, {}
+      `https://github.com/${owner}/${repo}/archive/refs/tags/${targetRef}.zip`, headers
     );
   }
   if (files.length === 0) {
