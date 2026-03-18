@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/webp", "image/avif"],
   },
-  serverExternalPackages: ["@xenova/transformers"],
 };
 
 export default nextConfig;

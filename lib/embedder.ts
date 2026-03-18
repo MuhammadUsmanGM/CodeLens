@@ -1,43 +1,45 @@
 // lib/embedder.ts
-import { pipeline } from "@xenova/transformers";
-import { EMBEDDING_MODEL, EMBEDDING_BATCH_SIZE } from "./constants";
+// Uses Google's free text-embedding-004 model via Gemini API
 
-let extractor: any = null;
+import { getGoogleApiKey } from "./env";
+import { EMBEDDING_BATCH_SIZE } from "./constants";
 
-async function getExtractor() {
-  if (!extractor) {
-    extractor = await pipeline("feature-extraction", EMBEDDING_MODEL, {
-      quantized: true,
-    });
-  }
-  return extractor;
-}
+const GOOGLE_EMBED_URL = "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:batchEmbedContents";
 
 /**
- * Embed texts in batches for much faster throughput.
- * The model processes EMBEDDING_BATCH_SIZE texts per call instead of one-at-a-time.
+ * Embed texts in batches using Google's text-embedding-004 (free tier).
+ * Max 100 texts per batch, 768-dim output.
  */
-export async function embedTexts(texts: string[], onProgress?: (current: number, total: number) => void): Promise<number[][]> {
-  const extract = await getExtractor();
+export async function embedTexts(
+  texts: string[],
+  onProgress?: (current: number, total: number) => void
+): Promise<number[][]> {
+  const apiKey = getGoogleApiKey();
   const embeddings: number[][] = [];
 
   for (let i = 0; i < texts.length; i += EMBEDDING_BATCH_SIZE) {
     const batch = texts.slice(i, i + EMBEDDING_BATCH_SIZE);
 
-    const output = await extract(batch, {
-      pooling: "mean",
-      normalize: true,
+    const response = await fetch(`${GOOGLE_EMBED_URL}?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        requests: batch.map((text) => ({
+          model: "models/text-embedding-004",
+          content: { parts: [{ text }] },
+          taskType: "RETRIEVAL_DOCUMENT",
+        })),
+      }),
     });
 
-    // output.data is a flat Float32Array of shape [batch_size, vector_dim]
-    // We need to slice it into individual vectors
-    const vectorDim = output.dims[output.dims.length - 1];
-    const flat: Float32Array = output.data;
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Embedding API error: ${response.status} — ${err}`);
+    }
 
-    for (let j = 0; j < batch.length; j++) {
-      const start = j * vectorDim;
-      const end = start + vectorDim;
-      embeddings.push(Array.from(flat.slice(start, end)));
+    const data = await response.json();
+    for (const embedding of data.embeddings) {
+      embeddings.push(embedding.values);
     }
 
     if (onProgress) {
@@ -48,17 +50,28 @@ export async function embedTexts(texts: string[], onProgress?: (current: number,
   return embeddings;
 }
 
-/** Pre-load the embedding model so the first real call is fast. */
-export async function warmupModel(): Promise<void> {
-  await getExtractor();
-}
-
 export async function embedQuery(query: string): Promise<number[]> {
-  const extract = await getExtractor();
-  const output = await extract(query, {
-    pooling: "mean",
-    normalize: true,
+  const apiKey = getGoogleApiKey();
+
+  const response = await fetch(`${GOOGLE_EMBED_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      requests: [
+        {
+          model: "models/text-embedding-004",
+          content: { parts: [{ text: query }] },
+          taskType: "RETRIEVAL_QUERY",
+        },
+      ],
+    }),
   });
 
-  return Array.from(output.data);
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Embedding API error: ${response.status} — ${err}`);
+  }
+
+  const data = await response.json();
+  return data.embeddings[0].values;
 }

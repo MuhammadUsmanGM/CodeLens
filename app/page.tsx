@@ -31,8 +31,6 @@ export default function Home() {
     const stored = localStorage.getItem("codelens_recent");
     if (stored) setRecentRepos(JSON.parse(stored));
 
-    // Pre-warm the embedding model in the background
-    fetch("/api/warmup").catch(() => {});
   }, []);
 
   const saveToRecent = (repoId: string) => {
