@@ -36,7 +36,7 @@ export async function GET() {
   const env = loadEnv();
   // Also check process.env for keys set via .env file
   const keys = ["GOOGLE_API_KEY", "QDRANT_URL", "QDRANT_API_KEY", "GITHUB_TOKEN"];
-  const result: Record<string, { set: boolean; masked: string }> = {};
+  const result: Record<string, { set: boolean; masked: string; value?: string }> = {};
 
   for (const key of keys) {
     const value = env[key] || process.env[key] || "";
@@ -46,6 +46,10 @@ export async function GET() {
     };
   }
 
+  // Handle non-masked model selection
+  const model = env["GEMINI_MODEL"] || process.env["GEMINI_MODEL"] || "gemini-2.5-flash-lite";
+  result["GEMINI_MODEL"] = { set: true, masked: model, value: model };
+
   return Response.json(result);
 }
 
@@ -54,7 +58,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   const env = loadEnv();
 
-  const ALLOWED_KEYS = ["GOOGLE_API_KEY", "QDRANT_URL", "QDRANT_API_KEY", "GITHUB_TOKEN"];
+  const ALLOWED_KEYS = ["GOOGLE_API_KEY", "QDRANT_URL", "QDRANT_API_KEY", "GITHUB_TOKEN", "GEMINI_MODEL"];
   for (const key of ALLOWED_KEYS) {
     if (body[key] !== undefined && body[key] !== "") {
       env[key] = body[key];

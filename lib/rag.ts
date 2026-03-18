@@ -2,10 +2,10 @@
 
 import { embedQuery } from "./embedder";
 import { searchSimilar, getRepoMetadata, getAllChunks, fetchFileChunks } from "./qdrant";
-import { RAG_TOP_K, RAG_CANDIDATE_MULTIPLIER, FULL_CONTEXT_TOKEN_THRESHOLD, GEMINI_MODEL } from "./constants";
+import { RAG_TOP_K, RAG_CANDIDATE_MULTIPLIER, FULL_CONTEXT_TOKEN_THRESHOLD } from "./constants";
 import { RepoChunk, HybridRetrievalResult, ChatMessage } from "@/types";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { getGoogleApiKey } from "./env";
+import { getGoogleApiKey, getGeminiModel } from "./env";
 
 /** Rewrite a follow-up message into a standalone search query using chat history */
 async function buildSearchQuery(message: string, history?: ChatMessage[]): Promise<string> {
@@ -19,7 +19,7 @@ async function buildSearchQuery(message: string, history?: ChatMessage[]): Promi
 
   try {
     const genAI = new GoogleGenerativeAI(getGoogleApiKey());
-    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+    const model = genAI.getGenerativeModel({ model: getGeminiModel() });
 
     const conversationBlock = recent
       .map(m => `${m.role === "user" ? "User" : "Assistant"}: ${m.content.slice(0, 300)}`)
@@ -45,7 +45,7 @@ async function rerankChunks(query: string, chunks: RepoChunk[], topK: number): P
 
   try {
     const genAI = new GoogleGenerativeAI(getGoogleApiKey());
-    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+    const model = genAI.getGenerativeModel({ model: getGeminiModel() });
 
     // Build a numbered list of chunk summaries for the LLM
     const chunkSummaries = chunks

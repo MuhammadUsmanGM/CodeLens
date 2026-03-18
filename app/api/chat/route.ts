@@ -4,8 +4,7 @@ import { NextRequest } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { retrieveHybrid, buildContext } from "@/lib/rag";
 import { buildHybridPrompt } from "@/lib/prompts";
-import { GEMINI_MODEL } from "@/lib/constants";
-import { getGoogleApiKey } from "@/lib/env";
+import { getGoogleApiKey, getGeminiModel } from "@/lib/env";
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
@@ -29,7 +28,7 @@ export async function POST(req: NextRequest) {
     // 3. Initialize Gemini
     const genAI = new GoogleGenerativeAI(getGoogleApiKey());
     const model = genAI.getGenerativeModel({
-      model: GEMINI_MODEL,
+      model: getGeminiModel(),
       systemInstruction: systemPrompt,
     });
 

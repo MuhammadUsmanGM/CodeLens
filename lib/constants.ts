@@ -54,7 +54,6 @@ export const FULL_CONTEXT_TOKEN_THRESHOLD = 80_000; // Below this = send full co
 export const METADATA_POINT_ID = 999_999_999; // Reserved Qdrant point ID for repo metadata
 export const QDRANT_UPSERT_BATCH_SIZE = 100;
 
-export const GEMINI_MODEL = "gemini-2.5-flash-lite"; // Primary reasoning model
 export const EMBEDDING_MODEL = "Xenova/jina-embeddings-v2-base-code"; // Local code-aware embedding model
 
 /** Rough token estimate: ~4 characters per token */

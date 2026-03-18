@@ -45,3 +45,8 @@ export function getGithubToken(): string | undefined {
   loadCodeLensEnv();
   return process.env.GITHUB_TOKEN || undefined;
 }
+
+export function getGeminiModel(): string {
+  loadCodeLensEnv();
+  return process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+}
