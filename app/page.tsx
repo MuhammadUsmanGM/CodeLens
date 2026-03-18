@@ -168,9 +168,7 @@ export default function Home() {
           buffer += decoder.decode(value, { stream: !done });
         }
 
-        // Process all complete events in the buffer
         const lines = buffer.split("\n\n");
-        // Only keep the last partial chunk in the buffer if not done
         buffer = done ? "" : (lines.pop() || "");
 
         for (const line of lines) {
@@ -190,27 +188,48 @@ export default function Home() {
             updateProgress(event.step, currentIdx, event.percent, event.detail);
 
             if (event.step === "complete") {
-              const repoId = event.repo_id;
-              if (!repoId) {
+              const id = event.repo_id;
+              if (!id) {
                 streamError = "Neural link completed but repository ID is missing.";
                 break;
               }
-              saveToRecent(repoId);
-              redirectRepoId = repoId;
+              saveToRecent(id);
+              redirectRepoId = id;
             }
           } catch (e) {
-            console.error("Neural SSE Parse Error:", e, "Line:", line);
+            // skip malformed events
           }
         }
 
         if (streamError || done) break;
       }
 
-      // Execute redirect after the loop fully exits — avoids async timing issues
+      // Primary redirect: complete event was received cleanly
       if (redirectRepoId) {
         toast.success("Neural link established! Data indexed.", { duration: 5000 });
         router.push(`/chat/${encodeURIComponent(redirectRepoId)}`);
         return;
+      }
+
+      // FALLBACK: stream closed without a clean complete event (buffering/timing issue)
+      // Poll the repo status API to confirm indexing succeeded
+      if (!streamError) {
+        try {
+          const checkRes = await fetch(`/api/repo/${encodeURIComponent(repoId)}`);
+          if (checkRes.ok) {
+            const data = await checkRes.json();
+            if (data.status === "ready") {
+              saveToRecent(repoId);
+              toast.success("Neural link established! Data indexed.", { duration: 5000 });
+              router.push(`/chat/${encodeURIComponent(repoId)}`);
+              return;
+            }
+          }
+        } catch (_) {
+          // Fallback polling failed — surface original error below
+        }
+        // If still not ready, surface a timeout error
+        throw new Error("Indexing appears to have completed but the repository status could not be confirmed. Try opening it from the home screen.");
       }
 
       // If the stream sent an error event, throw it to the outer catch
