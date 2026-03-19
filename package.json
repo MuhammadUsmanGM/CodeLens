@@ -1,5 +1,5 @@
 {
-  "name": "codelens-ai",
+  "name": "lens-ai",
   "version": "1.0.0",
   "description": "AI-powered codebase analysis — index any repo and chat with it locally",
   "author": "Muhammad Usman <https://github.com/MuhammadUsmanGM>",
@@ -18,11 +18,12 @@
     "nextjs",
     "developer-tools"
   ],
+  "type": "module",
   "engines": {
     "node": ">=18.17.0"
   },
   "bin": {
-    "lens": "./bin/codelens.mjs"
+    "lens": "./bin/codelens.js"
   },
   "files": [
     "bin/",
@@ -43,7 +44,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "node ./bin/postinstall.mjs"
+    "postinstall": "node ./bin/postinstall.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
