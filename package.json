@@ -26,7 +26,6 @@
   },
   "files": [
     "bin/",
-    "bin/postinstall.mjs",
     "app/",
     "components/",
     "hooks/",
@@ -37,16 +36,14 @@
     "next.config.ts",
     "postcss.config.mjs",
     "tsconfig.json",
-    "eslint.config.mjs",
-    ".next/"
+    "eslint.config.mjs"
   ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "node ./bin/postinstall.mjs",
-    "prepublishOnly": "npm run build"
+    "postinstall": "node ./bin/postinstall.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
