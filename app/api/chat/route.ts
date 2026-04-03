@@ -5,6 +5,10 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { retrieveHybrid, buildContext } from "@/lib/rag";
 import { buildHybridPrompt } from "@/lib/prompts";
 import { getGoogleApiKey, getGeminiModel } from "@/lib/env";
+import { createLogger } from "@/lib/logger";
+import { CodeLensError } from "@/lib/errors";
+
+const log = createLogger("chat");
 
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";

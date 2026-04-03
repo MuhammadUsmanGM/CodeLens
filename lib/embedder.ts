@@ -2,6 +2,10 @@
 
 import { EMBEDDING_MODEL, EMBEDDING_BATCH_SIZE } from "./constants";
 import { loadCodeLensEnv, getHfToken, getGoogleApiKey } from "./env";
+import { EmbeddingError } from "./errors";
+import { createLogger } from "./logger";
+
+const log = createLogger("embedder");
 
 // ─── Provider detection ───
 
@@ -47,17 +51,17 @@ async function googleEmbedBatch(texts: string[], taskType: string, retries = 0):
 
   if (response.status === 429) {
     if (retries >= 3) {
-      throw new Error("Embedding API rate limit exceeded after 3 retries. Try again in a few minutes or switch to Local embedding in Settings.");
+      throw new EmbeddingError("Embedding API rate limit exceeded after 3 retries. Try again in a few minutes or switch to Local embedding in Settings.", "RATE_LIMIT_EXCEEDED", 429);
     }
     const retryAfter = 62;
-    console.log(`[embedder] Rate limited, waiting ${retryAfter}s (retry ${retries + 1}/3)...`);
+    log.warn(`Rate limited, waiting ${retryAfter}s`, { retry: retries + 1, maxRetries: 3 });
     await sleep(retryAfter * 1000);
     return googleEmbedBatch(texts, taskType, retries + 1);
   }
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`Embedding API error: ${response.status} — ${err}`);
+    throw new EmbeddingError(`Embedding API error: ${response.status} — ${err}`, "EMBEDDING_API_ERROR");
   }
 
   const data = await response.json();
@@ -118,7 +122,6 @@ async function getExtractor() {
 
   if (token) {
     patchFetchWithToken(token);
-    if (!extractor) extractor = null;
   }
 
   if (!extractor) {

@@ -6,6 +6,10 @@ import { RAG_TOP_K, RAG_CANDIDATE_MULTIPLIER, FULL_CONTEXT_TOKEN_THRESHOLD } fro
 import { RepoChunk, HybridRetrievalResult, ChatMessage } from "@/types";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getGoogleApiKey, getGeminiModel } from "./env";
+import { createLogger } from "./logger";
+import { IngestionError } from "./errors";
+
+const log = createLogger("rag");
 
 /** Rewrite a follow-up message into a standalone search query using chat history */
 async function buildSearchQuery(message: string, history?: ChatMessage[]): Promise<string> {
@@ -32,8 +36,8 @@ async function buildSearchQuery(message: string, history?: ChatMessage[]): Promi
     const rewritten = result.response.text().trim();
     // Sanity check — if the model returned something too long or empty, fall back
     if (rewritten.length > 0 && rewritten.length < 500) return rewritten;
-  } catch (error) {
-    console.warn("[rag] Query rewrite failed, using original message:", error);
+  } catch (error: any) {
+    log.warn("Query rewrite failed, using original message", { error: error.message });
   }
 
   return message;
@@ -75,8 +79,8 @@ async function rerankChunks(query: string, chunks: RepoChunk[], topK: number): P
       // If we got enough results, use them; otherwise fall back to original order
       if (reranked.length >= topK * 0.5) return reranked;
     }
-  } catch (error) {
-    console.warn("[rag] Re-ranking failed, using vector order:", error);
+  } catch (error: any) {
+    log.warn("Re-ranking failed, using vector order", { error: error.message });
   }
 
   // Fallback: return the top-K in original vector similarity order
@@ -127,10 +131,10 @@ export async function retrieveHybrid(repoId: string, message: string, history?: 
   const searchQuery = await buildSearchQuery(message, history);
 
   if (!metadata) {
-    console.warn("[rag] No metadata found for", repoId, "— falling back to RAG mode");
+    log.warn("No metadata found, falling back to RAG mode", { repoId });
     const ragChunks = await retrieveByVector(repoId, searchQuery, RAG_TOP_K);
     if (ragChunks.length === 0) {
-      throw new Error("No indexed data found for this repository. Please re-index it from the home page.");
+      throw new IngestionError("No indexed data found for this repository. Please re-index it from the home page.", "NO_INDEX_DATA");
     }
     const sources = Array.from(new Set(ragChunks.map(c => c.filePath)));
     return { chunks: ragChunks, fileTree: "(file tree unavailable — re-index for full features)", mode: "rag" as const, sources };
@@ -153,7 +157,7 @@ export async function retrieveHybrid(repoId: string, message: string, history?: 
     const chunks = await getAllChunks(repoId);
 
     if (chunks.length === 0) {
-      throw new Error("No indexed data found. Please re-index this repository.");
+      throw new IngestionError("No indexed data found. Please re-index this repository.", "NO_INDEX_DATA");
     }
 
     const sources = Array.from(new Set(chunks.map(c => c.filePath)));
@@ -164,7 +168,7 @@ export async function retrieveHybrid(repoId: string, message: string, history?: 
   const ragChunks = await retrieveByVector(repoId, searchQuery, RAG_TOP_K);
 
   if (ragChunks.length === 0) {
-    throw new Error("No relevant code found. Try rephrasing your question or ask about a specific file.");
+    throw new IngestionError("No relevant code found. Try rephrasing your question or ask about a specific file.", "NO_RELEVANT_CODE");
   }
 
   // Smart file detection: if user mentions a file, include it fully

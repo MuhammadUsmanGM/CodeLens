@@ -1,9 +1,13 @@
 // lib/providers.ts
-// Abstract fetch layer for GitHub, GitLab, and Bitbucket
+// Abstract fetch layer for GitHub, GitLab, Bitbucket, and local folders
 
 import { ALLOWED_EXTENSIONS, SKIP_DIRS, MAX_FILES, MAX_FILE_SIZE_BYTES } from "./constants";
 import { getGithubToken } from "./env";
 import JSZip from "jszip";
+import { ProviderError } from "./errors";
+import { createLogger } from "./logger";
+
+const log = createLogger("providers");
 
 /** Detected platform from a repository URL */
 export type Platform = "github" | "gitlab" | "bitbucket";
@@ -93,7 +97,7 @@ export function parseRepoUrl(url: string): ParsedRepoUrl {
 
   const parts = cleanUrl.split("/").filter(Boolean);
   if (parts.length < 2) {
-    throw new Error("Invalid repository URL. Use owner/repo format.");
+    throw new ProviderError("Invalid repository URL. Use owner/repo format.", "INVALID_URL", 400);
   }
 
   const [owner, repo] = parts;
@@ -166,12 +170,12 @@ async function fetchAndExtractZip(zipUrl: string, authHeaders: HeadersInit): Pro
 
   const contentLength = response.headers.get("content-length");
   if (contentLength && parseInt(contentLength, 10) > 200 * 1024 * 1024) {
-    throw new Error("Repository is too large to process (>200MB ZIP). Try a smaller repository.");
+    throw new ProviderError("Repository is too large to process (>200MB ZIP). Try a smaller repository.", "REPO_TOO_LARGE", 400);
   }
 
   const buffer = await response.arrayBuffer();
   if (buffer.byteLength > 200 * 1024 * 1024) {
-    throw new Error("Repository is too large to process (>200MB ZIP). Try a smaller repository.");
+    throw new ProviderError("Repository is too large to process (>200MB ZIP). Try a smaller repository.", "REPO_TOO_LARGE", 400);
   }
 
   const zip = await JSZip.loadAsync(buffer);
@@ -235,9 +239,9 @@ async function fetchGithubRepo(owner: string, repo: string, ref?: string): Promi
   if (!targetRef) {
     const repoResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
     if (!repoResponse.ok) {
-      if (repoResponse.status === 404) throw new Error("GitHub: Repository not found or is private.");
-      if (repoResponse.status === 403) throw new Error("GitHub: API rate limit exceeded. Set GITHUB_TOKEN in .env.");
-      throw new Error(`GitHub API error: ${repoResponse.statusText}`);
+      if (repoResponse.status === 404) throw new ProviderError("GitHub: Repository not found or is private.", "GITHUB_NOT_FOUND", 404);
+      if (repoResponse.status === 403) throw new ProviderError("GitHub: API rate limit exceeded. Set GITHUB_TOKEN in .env.", "GITHUB_RATE_LIMIT", 429);
+      throw new ProviderError(`GitHub API error: ${repoResponse.statusText}`, "GITHUB_API_ERROR");
     }
     const repoData = await repoResponse.json();
     targetRef = repoData.default_branch || "main";
@@ -253,7 +257,7 @@ async function fetchGithubRepo(owner: string, repo: string, ref?: string): Promi
     );
   }
   if (!result || result.files.length === 0) {
-    throw new Error(`Failed to download GitHub repository for ref "${targetRef}".`);
+    throw new ProviderError(`Failed to download GitHub repository for ref "${targetRef}".`, "GITHUB_DOWNLOAD_FAILED");
   }
   return result;
 }
@@ -276,8 +280,8 @@ async function fetchGitlabRepo(owner: string, repo: string, ref?: string): Promi
   if (!targetRef) {
     const projectRes = await fetch(`https://gitlab.com/api/v4/projects/${projectId}`, { headers });
     if (!projectRes.ok) {
-      if (projectRes.status === 404) throw new Error("GitLab: Project not found or is private. Set GITLAB_TOKEN in .env for private repos.");
-      throw new Error(`GitLab API error: ${projectRes.statusText}`);
+      if (projectRes.status === 404) throw new ProviderError("GitLab: Project not found or is private. Set GITLAB_TOKEN in .env for private repos.", "GITLAB_NOT_FOUND", 404);
+      throw new ProviderError(`GitLab API error: ${projectRes.statusText}`, "GITLAB_API_ERROR");
     }
     const projectData = await projectRes.json();
     targetRef = projectData.default_branch || "main";
@@ -286,7 +290,7 @@ async function fetchGitlabRepo(owner: string, repo: string, ref?: string): Promi
   const archiveUrl = `https://gitlab.com/api/v4/projects/${projectId}/repository/archive.zip?sha=${encodeURIComponent(targetRef)}`;
   const result = await fetchAndExtractZip(archiveUrl, headers);
   if (!result || result.files.length === 0) {
-    throw new Error(`Failed to download GitLab repository for ref "${targetRef}".`);
+    throw new ProviderError(`Failed to download GitLab repository for ref "${targetRef}".`, "GITLAB_DOWNLOAD_FAILED");
   }
   return result;
 }
@@ -313,8 +317,8 @@ async function fetchBitbucketRepo(owner: string, repo: string, ref?: string): Pr
   if (!targetRef) {
     const repoRes = await fetch(`https://api.bitbucket.org/2.0/repositories/${owner}/${repo}`, { headers });
     if (!repoRes.ok) {
-      if (repoRes.status === 404) throw new Error("Bitbucket: Repository not found or is private.");
-      throw new Error(`Bitbucket API error: ${repoRes.statusText}`);
+      if (repoRes.status === 404) throw new ProviderError("Bitbucket: Repository not found or is private.", "BITBUCKET_NOT_FOUND", 404);
+      throw new ProviderError(`Bitbucket API error: ${repoRes.statusText}`, "BITBUCKET_API_ERROR");
     }
     const repoData = await repoRes.json();
     targetRef = repoData.mainbranch?.name || "main";
@@ -323,7 +327,7 @@ async function fetchBitbucketRepo(owner: string, repo: string, ref?: string): Pr
   const archiveUrl = `https://bitbucket.org/${owner}/${repo}/get/${targetRef}.zip`;
   const result = await fetchAndExtractZip(archiveUrl, headers);
   if (!result || result.files.length === 0) {
-    throw new Error(`Failed to download Bitbucket repository for ref "${targetRef}".`);
+    throw new ProviderError(`Failed to download Bitbucket repository for ref "${targetRef}".`, "BITBUCKET_DOWNLOAD_FAILED");
   }
   return result;
 }

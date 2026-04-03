@@ -2,6 +2,7 @@
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
+import { ConfigError } from "./errors";
 
 /** Load ~/.codelens/.env into process.env.
  * Always re-reads from disk so tokens saved via the Settings UI
@@ -23,8 +24,9 @@ function getRequiredEnv(name: string): string {
   loadCodeLensEnv();
   const value = process.env[name];
   if (!value) {
-    throw new Error(
-      `Missing required environment variable: ${name}. Run "codelens" to set up, or add it to ~/.codelens/.env`
+    throw new ConfigError(
+      `Missing required environment variable: ${name}. Run "codelens" to set up, or add it to ~/.codelens/.env`,
+      "MISSING_ENV_VAR",
     );
   }
   return value;
@@ -54,4 +56,22 @@ export function getGeminiModel(): string {
 export function getHfToken(): string | undefined {
   loadCodeLensEnv();
   return process.env.HF_TOKEN || undefined;
+}
+
+export function getVectorStoreType(): "lancedb" | "qdrant" {
+  loadCodeLensEnv();
+  const explicit = process.env.VECTOR_STORE?.toLowerCase();
+  if (explicit === "qdrant") return "qdrant";
+  if (explicit === "lancedb") return "lancedb";
+  // Backward compat: if Qdrant credentials exist and no explicit choice, default to qdrant
+  if (process.env.QDRANT_URL && process.env.QDRANT_API_KEY) return "qdrant";
+  return "lancedb";
+}
+
+export function getQdrantConfigOptional(): { url?: string; apiKey?: string } {
+  loadCodeLensEnv();
+  return {
+    url: process.env.QDRANT_URL || undefined,
+    apiKey: process.env.QDRANT_API_KEY || undefined,
+  };
 }

@@ -4,6 +4,10 @@ import { QdrantClient } from "@qdrant/js-client-rest";
 import { QdrantPoint, RepoMetadata, RepoChunk } from "@/types";
 import { QDRANT_VECTOR_SIZE, QDRANT_UPSERT_BATCH_SIZE, METADATA_POINT_ID } from "./constants";
 import { getQdrantConfig } from "./env";
+import { createLogger } from "./logger";
+import { VectorStoreError } from "./errors";
+
+const log = createLogger("qdrant");
 
 function sanitizeUtf8(str: string): string {
   // Removes lone surrogates that break JSON stringification
@@ -43,7 +47,8 @@ export async function collectionExists(repoId: string): Promise<boolean> {
   try {
     await getQdrantClient().getCollection(collectionName);
     return true;
-  } catch (error) {
+  } catch {
+    log.debug("Collection not found", { collectionName });
     return false;
   }
 }
@@ -103,7 +108,8 @@ export async function upsertPoints(repoId: string, points: QdrantPoint[], onProg
         points: sanitizedBatch,
       });
     } catch (error: any) {
-      throw error;
+      log.error("Failed to upsert points", { collectionName, batchStart: i, error: error.message });
+      throw new VectorStoreError(`Failed to upsert vectors: ${error.message}`);
     }
     
     if (onProgress) onProgress(Math.min(i + QDRANT_UPSERT_BATCH_SIZE, points.length), points.length);
@@ -121,7 +127,8 @@ export async function searchSimilar(repoId: string, queryVector: number[], topK:
     });
     // Filter out the metadata point in JS
     return results.filter(r => r.id !== METADATA_POINT_ID).slice(0, topK);
-  } catch (error) {
+  } catch (error: any) {
+    log.warn("Vector search failed, returning empty results", { collectionName, error: error.message });
     return [];
   }
 }
@@ -130,8 +137,9 @@ export async function deleteCollection(repoId: string) {
   const collectionName = getCollectionName(repoId);
   try {
     await getQdrantClient().deleteCollection(collectionName);
-  } catch (error) {
-    // Silent fail if not found
+    log.info("Collection deleted", { collectionName });
+  } catch {
+    log.debug("Collection not found for deletion", { collectionName });
   }
 }
 

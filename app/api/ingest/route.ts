@@ -15,6 +15,10 @@ import {
 } from "@/lib/qdrant";
 import { estimateTokens } from "@/lib/constants";
 import { QdrantPoint, SSEProgressEvent } from "@/types";
+import { createLogger } from "@/lib/logger";
+import { CodeLensError } from "@/lib/errors";
+
+const log = createLogger("ingest");
 
 export const maxDuration = 300;
 export const dynamic = "force-dynamic";
@@ -222,10 +226,15 @@ export async function POST(req: NextRequest) {
 
         controller.close();
       } catch (error: any) {
+        const isCodeLensError = error instanceof CodeLensError;
         const cleanMessage = error.status === 400
           ? "Database metadata mismatch. Re-indexing required."
           : (error.message || "An unknown error occurred");
 
+        log.error("Ingestion failed", {
+          error: cleanMessage,
+          code: isCodeLensError ? error.code : undefined,
+        });
         sendStep({ step: "error", message: cleanMessage });
         controller.close();
       }
