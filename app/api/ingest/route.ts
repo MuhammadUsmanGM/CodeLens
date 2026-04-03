@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         // 3. Filtering complete — show detailed skip breakdown
         const skipParts: string[] = [];
         if (stats.skippedUnsupported > 0) skipParts.push(`${stats.skippedUnsupported} unsupported type`);
-        if (stats.skippedLarge > 0) skipParts.push(`${stats.skippedLarge} too large (>100KB)`);
+        if (stats.skippedLarge > 0) skipParts.push(`${stats.skippedLarge} too large (>1MB)`);
         if (stats.skippedDir > 0) skipParts.push(`${stats.skippedDir} in excluded dirs`);
         if (stats.truncatedByLimit > 0) skipParts.push(`${stats.truncatedByLimit} over file limit`);
         const skipDetail = skipParts.length > 0 ? `Skipped: ${skipParts.join(", ")}` : undefined;
