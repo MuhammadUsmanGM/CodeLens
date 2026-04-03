@@ -7,7 +7,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { ProcessingScreen, Step } from "@/components/ProcessingScreen";
 import { Toaster, toast } from "sonner";
 import { SettingsModal } from "@/components/SettingsModal";
-import { ArrowRight, Github, Linkedin, Settings } from "lucide-react";
+import { ArrowRight, Github, Linkedin, Settings, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const INITIAL_STEPS: Step[] = [
@@ -25,6 +25,7 @@ export default function Home() {
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
   const [recentRepos, setRecentRepos] = useState<string[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [setupNeeded, setSetupNeeded] = useState(false);
   const router = useRouter();
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -33,6 +34,18 @@ export default function Home() {
     const stored = localStorage.getItem("codelens_recent");
     if (stored) setRecentRepos(JSON.parse(stored));
 
+    // Check if required API keys are configured
+    fetch("/api/settings")
+      .then(res => res.json())
+      .then(data => {
+        const missing = !data.GOOGLE_API_KEY?.set || !data.QDRANT_URL?.set || !data.QDRANT_API_KEY?.set;
+        if (missing) {
+          setSetupNeeded(true);
+          setSettingsOpen(true);
+          toast.info("Welcome to CodeLens! Please configure your API keys to get started.", { duration: 8000 });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const saveToRecent = (repoId: string) => {
@@ -298,7 +311,17 @@ export default function Home() {
       </div>
 
       {/* Settings Modal */}
-      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsModal open={settingsOpen} onClose={() => {
+        setSettingsOpen(false);
+        if (setupNeeded) {
+          fetch("/api/settings").then(r => r.json()).then(data => {
+            if (data.GOOGLE_API_KEY?.set && data.QDRANT_URL?.set && data.QDRANT_API_KEY?.set) {
+              setSetupNeeded(false);
+              toast.success("Setup complete! You're ready to analyze repositories.", { duration: 5000 });
+            }
+          }).catch(() => {});
+        }
+      }} />
 
       {/* Header */}
       <div className="absolute top-0 right-0 p-8 z-50 flex items-center gap-3">
@@ -318,6 +341,20 @@ export default function Home() {
       )}>
         {!isAnalyzing ? (
           <>
+            {setupNeeded && (
+              <div
+                onClick={() => setSettingsOpen(true)}
+                className="w-full max-w-2xl flex items-center gap-3 px-5 py-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors"
+              >
+                <AlertCircle size={18} className="text-amber-500 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Setup required</p>
+                  <p className="text-xs text-muted-foreground">Configure your Google API Key and Qdrant credentials to start analyzing repositories.</p>
+                </div>
+                <Settings size={16} className="text-muted-foreground shrink-0" />
+              </div>
+            )}
+
             <RepoInput onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
             
             {recentRepos.length > 0 && (

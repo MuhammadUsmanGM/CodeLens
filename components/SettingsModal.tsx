@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Eye, EyeOff, Check, Loader2, Cpu, Shield, Globe, Key, Zap, HardDrive } from "lucide-react";
+import { X, Eye, EyeOff, Check, Loader2, Cpu, Shield, Globe, Key, Zap, HardDrive, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -17,13 +17,44 @@ interface KeyState {
 }
 
 const FIELDS = [
-  { key: "GOOGLE_API_KEY", label: "Google Gemini API Key", required: true, placeholder: "AIza...", icon: Key },
-  { key: "QDRANT_URL", label: "Qdrant URL", required: true, placeholder: "https://xxx.cloud.qdrant.io:6333", icon: Globe },
-  { key: "QDRANT_API_KEY", label: "Qdrant API Key", required: true, placeholder: "Your Qdrant API key", icon: Shield },
-  { key: "GITHUB_TOKEN", label: "GitHub Token", required: false, placeholder: "ghp_... (optional)", icon: Key },
-  { key: "GITLAB_TOKEN", label: "GitLab Token", required: false, placeholder: "glpat-... (optional)", icon: Key },
-  { key: "BITBUCKET_APP_PASSWORD", label: "Bitbucket App Password", required: false, placeholder: "App password (optional)", icon: Key },
-  { key: "HF_TOKEN", label: "Hugging Face Token", required: false, placeholder: "hf_... (optional)", icon: Shield },
+  {
+    key: "GOOGLE_API_KEY", label: "Google Gemini API Key", required: true, placeholder: "AIza...", icon: Key,
+    guide: "Get a free API key from Google AI Studio",
+    guideUrl: "https://aistudio.google.com/apikey",
+    steps: ["Go to Google AI Studio", "Click 'Create API Key'", "Copy and paste it here"],
+  },
+  {
+    key: "QDRANT_URL", label: "Qdrant URL", required: true, placeholder: "https://xxx.cloud.qdrant.io:6333", icon: Globe,
+    guide: "Create a free cluster on Qdrant Cloud",
+    guideUrl: "https://cloud.qdrant.io/",
+    steps: ["Sign up at Qdrant Cloud", "Create a free cluster", "Copy the cluster URL (with port)"],
+  },
+  {
+    key: "QDRANT_API_KEY", label: "Qdrant API Key", required: true, placeholder: "Your Qdrant API key", icon: Shield,
+    guide: "Found in your Qdrant Cloud dashboard under 'API Keys'",
+    guideUrl: "https://cloud.qdrant.io/",
+    steps: ["Open your cluster dashboard", "Go to 'API Keys' section", "Create a new key and paste it here"],
+  },
+  {
+    key: "GITHUB_TOKEN", label: "GitHub Token", required: false, placeholder: "ghp_... (optional)", icon: Key,
+    guide: "Needed for private repos & higher rate limits",
+    guideUrl: "https://github.com/settings/tokens/new",
+  },
+  {
+    key: "GITLAB_TOKEN", label: "GitLab Token", required: false, placeholder: "glpat-... (optional)", icon: Key,
+    guide: "Required for accessing GitLab repositories",
+    guideUrl: "https://gitlab.com/-/user_settings/personal_access_tokens",
+  },
+  {
+    key: "BITBUCKET_APP_PASSWORD", label: "Bitbucket App Password", required: false, placeholder: "App password (optional)", icon: Key,
+    guide: "Required for accessing Bitbucket repositories",
+    guideUrl: "https://bitbucket.org/account/settings/app-passwords/",
+  },
+  {
+    key: "HF_TOKEN", label: "Hugging Face Token", required: false, placeholder: "hf_... (optional)", icon: Shield,
+    guide: "Only needed if using local Xenova embeddings with gated models",
+    guideUrl: "https://huggingface.co/settings/tokens",
+  },
 ];
 
 const EMBED_PROVIDERS = [
@@ -248,13 +279,16 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                     </div>
                     
                     <div className="space-y-5">
-                      {FIELDS.map(({ key, label, required, placeholder, icon: Icon }) => (
+                      {FIELDS.map(({ key, label, required, placeholder, icon: Icon, guide, guideUrl, steps }) => (
                         <div key={key} className="space-y-2.5">
                           <div className="flex items-center gap-2">
                             <Icon size={12} className="text-muted-foreground/60" />
                             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                               {label}
                             </label>
+                            {required && !keys[key]?.set && !values[key] && (
+                              <span className="text-[9px] text-amber-500 font-bold uppercase ml-1">Required</span>
+                            )}
                             {!required && (
                               <span className="text-[9px] text-muted-foreground/30 font-bold uppercase ml-1">Optional</span>
                             )}
@@ -264,6 +298,31 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                               </span>
                             )}
                           </div>
+
+                          {/* Guide: show for required fields that aren't set, or all fields when not set */}
+                          {!keys[key]?.set && guide && (
+                            <div className="rounded-xl border border-white/5 bg-muted/10 px-4 py-3 space-y-2">
+                              <a
+                                href={guideUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 text-[11px] font-semibold text-primary hover:underline"
+                              >
+                                <ExternalLink size={11} />
+                                {guide}
+                              </a>
+                              {steps && (
+                                <ol className="space-y-1 pl-4">
+                                  {steps.map((step, i) => (
+                                    <li key={i} className="text-[10px] text-muted-foreground/70 list-decimal">
+                                      {step}
+                                    </li>
+                                  ))}
+                                </ol>
+                              )}
+                            </div>
+                          )}
+
                           <div className="relative group">
                             <input
                               type={visible[key] ? "text" : "password"}
@@ -274,7 +333,10 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                               placeholder={keys[key]?.set ? keys[key].masked : placeholder}
                               className={cn(
                                 "w-full px-5 py-4 pr-12 rounded-2xl text-xs font-mono transition-all",
-                                "bg-background/80 border border-white/5",
+                                "bg-background/80 border",
+                                required && !keys[key]?.set && !values[key]
+                                  ? "border-amber-500/30 ring-2 ring-amber-500/10"
+                                  : "border-white/5",
                                 "text-foreground placeholder:text-muted-foreground/20",
                                 "focus:outline-none focus:border-primary/40 focus:ring-4 focus:ring-primary/5 group-hover:border-white/10"
                               )}
