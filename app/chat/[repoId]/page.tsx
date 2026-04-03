@@ -31,13 +31,21 @@ export default function ChatPage() {
           return;
         }
         const data = await res.json();
-        if (data.status === "not_found" || data.status === "reindex_required") {
-          // Clean stale entry from recent repos
+        if (data.status === "not_found") {
           removeFromRecent(repoId);
-          toast.error(data.status === "reindex_required"
-            ? "Repository needs re-indexing"
-            : "Repository not indexed — please re-analyze it"
-          );
+          toast.error("Repository not indexed — please re-analyze it");
+          router.push("/");
+          return;
+        }
+        if (data.status === "reindex_required") {
+          if (data.reason === "provider_mismatch") {
+            toast.error(
+              `This repo was indexed with "${data.indexedWith}" embeddings but you're now using "${data.currentProvider}". Please re-index or switch back to "${data.indexedWith}" in Settings.`,
+              { duration: 10000 }
+            );
+          } else {
+            toast.error("Repository needs re-indexing (vector dimensions changed).");
+          }
           router.push("/");
           return;
         }

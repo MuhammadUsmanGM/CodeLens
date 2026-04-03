@@ -1,7 +1,8 @@
 // app/api/repo/[repoId]/route.ts
 
 import { NextRequest } from "next/server";
-import { getQdrantClient, deleteCollection, getCollectionName } from "@/lib/qdrant";
+import { getQdrantClient, deleteCollection, getCollectionName, getRepoMetadata } from "@/lib/qdrant";
+import { getActiveProvider } from "@/lib/embedder";
 import { QDRANT_VECTOR_SIZE } from "@/lib/constants";
 
 export async function GET(
@@ -17,12 +18,26 @@ export async function GET(
     const existingSize = (info.config.params.vectors as any).size;
 
     if (existingSize !== QDRANT_VECTOR_SIZE) {
-      return Response.json({ 
-        status: "reindex_required", 
+      return Response.json({
+        status: "reindex_required",
         reason: "dimension_mismatch",
         currentSize: existingSize,
         requiredSize: QDRANT_VECTOR_SIZE
       });
+    }
+
+    // Check embedding provider mismatch early (before user starts chatting)
+    const metadata = await getRepoMetadata(decodedRepoId);
+    if (metadata?.embeddingProvider) {
+      const currentProvider = getActiveProvider();
+      if (metadata.embeddingProvider !== currentProvider) {
+        return Response.json({
+          status: "reindex_required",
+          reason: "provider_mismatch",
+          indexedWith: metadata.embeddingProvider,
+          currentProvider,
+        });
+      }
     }
 
     return Response.json({

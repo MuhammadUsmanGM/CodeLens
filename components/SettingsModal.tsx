@@ -21,6 +21,8 @@ const FIELDS = [
   { key: "QDRANT_URL", label: "Qdrant URL", required: true, placeholder: "https://xxx.cloud.qdrant.io:6333", icon: Globe },
   { key: "QDRANT_API_KEY", label: "Qdrant API Key", required: true, placeholder: "Your Qdrant API key", icon: Shield },
   { key: "GITHUB_TOKEN", label: "GitHub Token", required: false, placeholder: "ghp_... (optional)", icon: Key },
+  { key: "GITLAB_TOKEN", label: "GitLab Token", required: false, placeholder: "glpat-... (optional)", icon: Key },
+  { key: "BITBUCKET_APP_PASSWORD", label: "Bitbucket App Password", required: false, placeholder: "App password (optional)", icon: Key },
   { key: "HF_TOKEN", label: "Hugging Face Token", required: false, placeholder: "hf_... (optional)", icon: Shield },
 ];
 
