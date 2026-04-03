@@ -134,7 +134,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                 </h2>
                 <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5 font-medium">
                   <Cpu size={12} className="text-primary/60" />
-                  Neural Configuration • v0.1.0
+                  Neural Configuration • v1.0.1
                 </p>
               </div>
               <button
