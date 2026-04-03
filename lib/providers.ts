@@ -149,17 +149,6 @@ function getFilePriority(path: string): number {
 // File filtering (shared)
 // ---------------------------------------------------------------------------
 
-function isValidFile(path: string): boolean {
-  const lowerPath = path.toLowerCase();
-  const hasAllowedExtension = Array.from(ALLOWED_EXTENSIONS).some(ext => lowerPath.endsWith(ext));
-  if (!hasAllowedExtension) return false;
-
-  const isInSkipDir = Array.from(SKIP_DIRS).some(dir =>
-    lowerPath.startsWith(`${dir}/`) || lowerPath.includes(`/${dir}/`)
-  );
-  return !isInSkipDir;
-}
-
 // ---------------------------------------------------------------------------
 // ZIP-based fetch (shared logic with platform-specific download URL)
 // ---------------------------------------------------------------------------

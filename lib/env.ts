@@ -58,20 +58,3 @@ export function getHfToken(): string | undefined {
   return process.env.HF_TOKEN || undefined;
 }
 
-export function getVectorStoreType(): "lancedb" | "qdrant" {
-  loadCodeLensEnv();
-  const explicit = process.env.VECTOR_STORE?.toLowerCase();
-  if (explicit === "qdrant") return "qdrant";
-  if (explicit === "lancedb") return "lancedb";
-  // Backward compat: if Qdrant credentials exist and no explicit choice, default to qdrant
-  if (process.env.QDRANT_URL && process.env.QDRANT_API_KEY) return "qdrant";
-  return "lancedb";
-}
-
-export function getQdrantConfigOptional(): { url?: string; apiKey?: string } {
-  loadCodeLensEnv();
-  return {
-    url: process.env.QDRANT_URL || undefined,
-    apiKey: process.env.QDRANT_API_KEY || undefined,
-  };
-}

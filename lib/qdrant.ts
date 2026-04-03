@@ -58,16 +58,11 @@ export async function createCollection(repoId: string) {
   const client = getQdrantClient();
 
   try {
-    const info = await client.getCollection(collectionName);
-    const vectorsConfig = info.config.params.vectors;
-
-    // Handle both single vector and multiple vector configurations
-    const existingSize = (vectorsConfig as any).size || (Object.values(vectorsConfig as any)[0] as any).size;
-
+    await client.getCollection(collectionName);
     // Always delete and recreate to ensure fresh data (avoids stale/duplicate chunks on re-ingest)
     await client.deleteCollection(collectionName);
     await new Promise(r => setTimeout(r, 1000));
-  } catch (error) {
+  } catch {
     // Collection doesn't exist yet — will create below
   }
 
