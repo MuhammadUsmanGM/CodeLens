@@ -117,6 +117,19 @@ function ensureBuild() {
   }
 }
 
+// --- Find free port ---
+
+async function findFreePort(startPort) {
+  const { createServer } = await import("net");
+  return new Promise((resolve) => {
+    const server = createServer();
+    server.listen(startPort, () => {
+      server.close(() => resolve(startPort));
+    });
+    server.on("error", () => resolve(findFreePort(startPort + 1)));
+  });
+}
+
 // --- Open browser ---
 
 function openBrowser(url) {
@@ -142,11 +155,19 @@ async function main() {
   await ensureEnv();
   ensureBuild();
 
-  const port = process.env.PORT || 3000;
+  const preferredPort = parseInt(process.env.PORT || "4983", 10);
+  const port = await findFreePort(preferredPort);
 
-  console.log(chalk.cyan("  ╔══════════════════════════════════════╗"));
-  console.log(chalk.cyan(`  ║  CodeLens running → http://localhost:${port}  ║`));
-  console.log(chalk.cyan("  ╚══════════════════════════════════════╝"));
+  const url = `http://localhost:${port}`;
+  const line = `  CodeLens running → ${url}`;
+  const innerWidth = line.length + 2;
+  const top = "╔" + "═".repeat(innerWidth) + "╗";
+  const mid = "║" + line + "  ║";
+  const bot = "╚" + "═".repeat(innerWidth) + "╝";
+
+  console.log(chalk.cyan(`  ${top}`));
+  console.log(chalk.cyan(`  ${mid}`));
+  console.log(chalk.cyan(`  ${bot}`));
   console.log(chalk.dim("\n  Press Ctrl+C to stop.\n"));
 
   const server = spawn("npx", ["next", "start", "-p", String(port)], {
