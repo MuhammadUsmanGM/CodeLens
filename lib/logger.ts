@@ -52,8 +52,9 @@ function formatProd(entry: LogEntry): string {
   return JSON.stringify(entry);
 }
 
-const isProd = process.env.NODE_ENV === "production";
-const format = isProd ? formatProd : formatDev;
+function getFormat() {
+  return process.env.NODE_ENV === "production" ? formatProd : formatDev;
+}
 
 export function createLogger(module: string): Logger {
   const minPriority = LEVEL_PRIORITY[getMinLevel()];
@@ -69,7 +70,7 @@ export function createLogger(module: string): Logger {
       timestamp: new Date().toISOString(),
     };
 
-    const formatted = format(entry);
+    const formatted = getFormat()(entry);
 
     switch (level) {
       case "error":

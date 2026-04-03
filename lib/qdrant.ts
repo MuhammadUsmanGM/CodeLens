@@ -61,7 +61,11 @@ export async function createCollection(repoId: string) {
     await client.getCollection(collectionName);
     // Always delete and recreate to ensure fresh data (avoids stale/duplicate chunks on re-ingest)
     await client.deleteCollection(collectionName);
-    await new Promise(r => setTimeout(r, 1000));
+    // Wait for deletion to propagate — retry until collection is gone
+    for (let attempt = 0; attempt < 10; attempt++) {
+      await new Promise(r => setTimeout(r, 500));
+      try { await client.getCollection(collectionName); } catch { break; }
+    }
   } catch {
     // Collection doesn't exist yet — will create below
   }

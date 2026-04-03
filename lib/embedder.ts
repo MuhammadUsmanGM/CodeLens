@@ -95,12 +95,12 @@ async function googleEmbedQuery(query: string): Promise<number[]> {
 // ─── Local Xenova embeddings ───
 
 let extractor: any = null;
-let _patchedFetch = false;
+let _patchedToken: string | null = null;
+const _originalFetch = globalThis.fetch;
 
 function patchFetchWithToken(token: string) {
-  if (_patchedFetch) return;
-  _patchedFetch = true;
-  const originalFetch = globalThis.fetch;
+  if (_patchedToken === token) return;
+  _patchedToken = token;
   globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = input.toString();
     if (url.includes("huggingface.co")) {
@@ -112,7 +112,7 @@ function patchFetchWithToken(token: string) {
         },
       };
     }
-    return originalFetch(input as any, init);
+    return _originalFetch(input as any, init);
   };
 }
 
