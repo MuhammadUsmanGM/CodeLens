@@ -13,8 +13,15 @@ const log = createLogger("chat");
 export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
+const MAX_BODY_SIZE = 512_000; // 500KB — message + history
+
 export async function POST(req: NextRequest) {
   try {
+    const contentLength = parseInt(req.headers.get("content-length") || "0", 10);
+    if (contentLength > MAX_BODY_SIZE) {
+      return Response.json({ error: "Request body too large." }, { status: 413 });
+    }
+
     const { repo_id, message, history } = await req.json();
 
     if (!repo_id || !message) {
@@ -58,8 +65,13 @@ export async function POST(req: NextRequest) {
           });
 
           const result = await chat.sendMessageStream(message);
+          const abortSignal = req.signal;
 
           for await (const chunk of result.stream) {
+            if (abortSignal.aborted) {
+              controller.close();
+              return;
+            }
             const chunkText = chunk.text();
             sendEvent("message", chunkText);
           }

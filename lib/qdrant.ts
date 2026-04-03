@@ -32,6 +32,19 @@ export function getQdrantClient() {
   return client;
 }
 
+/** Quick health check — call before heavy operations to surface connection issues early */
+export async function checkQdrantConnection(): Promise<void> {
+  const { url } = getQdrantConfig();
+  try {
+    await getQdrantClient().getCollections();
+  } catch (error: any) {
+    const hint = error.code === "ECONNREFUSED" || error.code === "ENOTFOUND"
+      ? `Cannot reach Qdrant at ${url}. Is the server running?`
+      : `Qdrant connection failed (${url}): ${error.message}`;
+    throw new VectorStoreError(hint, "QDRANT_UNREACHABLE", 503);
+  }
+}
+
 export function getCollectionName(repoId: string) {
   // Use a short hash to guarantee unique, collision-free collection names
   // This avoids lossy character replacement where e.g. "owner/repo@main" and "owner/repo_main" could collide

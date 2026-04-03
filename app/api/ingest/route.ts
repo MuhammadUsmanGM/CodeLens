@@ -12,6 +12,7 @@ import {
   storeRepoMetadata,
   getRepoMetadata,
   deletePointsByFile,
+  checkQdrantConnection,
 } from "@/lib/qdrant";
 import { estimateTokens } from "@/lib/constants";
 import { QdrantPoint, SSEProgressEvent } from "@/types";
@@ -28,7 +29,14 @@ function hashContent(content: string): string {
   return crypto.createHash("sha256").update(content).digest("hex").slice(0, 16);
 }
 
+const MAX_BODY_SIZE = 1024; // 1KB — only a URL is expected
+
 export async function POST(req: NextRequest) {
+  const contentLength = parseInt(req.headers.get("content-length") || "0", 10);
+  if (contentLength > MAX_BODY_SIZE) {
+    return Response.json({ error: "Request body too large." }, { status: 413 });
+  }
+
   const { github_url } = await req.json();
 
   if (!github_url || typeof github_url !== "string" || github_url.length > 500) {
@@ -44,6 +52,9 @@ export async function POST(req: NextRequest) {
       };
 
       try {
+        // 0. Verify Qdrant is reachable before doing any work
+        await checkQdrantConnection();
+
         // 1. Parse & Validate (supports GitHub, GitLab, Bitbucket)
         sendStep({ step: "validating", message: "Detecting platform & verifying repository...", percent: 2 });
         const parsed = parseRepoUrl(github_url);
