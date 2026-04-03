@@ -31,8 +31,8 @@ function hashContent(content: string): string {
 export async function POST(req: NextRequest) {
   const { github_url } = await req.json();
 
-  if (!github_url) {
-    return Response.json({ error: "Repository URL is required" }, { status: 400 });
+  if (!github_url || typeof github_url !== "string" || github_url.length > 500) {
+    return Response.json({ error: "A valid repository URL is required (max 500 characters)." }, { status: 400 });
   }
 
   const encoder = new TextEncoder();

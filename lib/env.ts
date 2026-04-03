@@ -5,10 +5,18 @@ import { homedir } from "os";
 import { ConfigError } from "./errors";
 
 /** Load ~/.codelens/.env into process.env.
- * Always re-reads from disk so tokens saved via the Settings UI
- * are picked up without requiring a server restart.
+ * Re-reads from disk at most every 5 seconds so tokens saved via
+ * the Settings UI are picked up without requiring a server restart,
+ * while avoiding redundant synchronous disk reads during a single request.
  */
+let _envLastLoaded = 0;
+const ENV_TTL_MS = 5_000;
+
 export function loadCodeLensEnv() {
+  const now = Date.now();
+  if (now - _envLastLoaded < ENV_TTL_MS) return;
+  _envLastLoaded = now;
+
   const envPath = join(homedir(), ".codelens", ".env");
   if (!existsSync(envPath)) return;
   for (const line of readFileSync(envPath, "utf-8").split("\n")) {

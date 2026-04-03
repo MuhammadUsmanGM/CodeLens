@@ -21,9 +21,11 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const validHistory = Array.isArray(history) ? history : [];
+
     // 1. Hybrid retrieval — full context for small repos, RAG for large
     //    Pass chat history for context-aware query rewriting
-    const { chunks, fileTree, mode, sources } = await retrieveHybrid(repo_id, message, history);
+    const { chunks, fileTree, mode, sources } = await retrieveHybrid(repo_id, message, validHistory);
     const context = buildContext(chunks);
 
     // 2. Build mode-aware prompt
@@ -49,7 +51,7 @@ export async function POST(req: NextRequest) {
 
           // Prepare history for Gemini
           const chat = model.startChat({
-            history: history?.map((msg: any) => ({
+            history: validHistory.map((msg: any) => ({
               role: msg.role === "user" ? "user" : "model",
               parts: [{ text: msg.content }],
             })) || [],
