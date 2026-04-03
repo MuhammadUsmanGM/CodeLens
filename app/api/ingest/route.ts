@@ -238,7 +238,7 @@ export async function POST(req: NextRequest) {
         controller.close();
       } catch (error: any) {
         const isCodeLensError = error instanceof CodeLensError;
-        const cleanMessage = error.status === 400
+        const cleanMessage = error.statusCode === 400
           ? "Database metadata mismatch. Re-indexing required."
           : (error.message || "An unknown error occurred");
 

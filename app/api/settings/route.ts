@@ -35,7 +35,7 @@ function saveEnv(env: Record<string, string>) {
 export async function GET() {
   const env = loadEnv();
   // Also check process.env for keys set via .env file
-  const keys = ["GOOGLE_API_KEY", "QDRANT_URL", "QDRANT_API_KEY", "GITHUB_TOKEN", "GITLAB_TOKEN", "BITBUCKET_APP_PASSWORD", "GEMINI_MODEL", "HF_TOKEN", "EMBEDDING_PROVIDER"];
+  const keys = ["GOOGLE_API_KEY", "QDRANT_URL", "QDRANT_API_KEY", "GITHUB_TOKEN", "GITLAB_TOKEN", "BITBUCKET_USERNAME", "BITBUCKET_APP_PASSWORD", "GEMINI_MODEL", "HF_TOKEN", "EMBEDDING_PROVIDER"];
   const result: Record<string, { set: boolean; masked: string; value?: string }> = {};
 
   for (const key of keys) {
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   const env = loadEnv();
 
-  const ALLOWED_KEYS = ["GOOGLE_API_KEY", "QDRANT_URL", "QDRANT_API_KEY", "GITHUB_TOKEN", "GITLAB_TOKEN", "BITBUCKET_APP_PASSWORD", "GEMINI_MODEL", "EMBEDDING_PROVIDER", "HF_TOKEN"];
+  const ALLOWED_KEYS = ["GOOGLE_API_KEY", "QDRANT_URL", "QDRANT_API_KEY", "GITHUB_TOKEN", "GITLAB_TOKEN", "BITBUCKET_USERNAME", "BITBUCKET_APP_PASSWORD", "GEMINI_MODEL", "EMBEDDING_PROVIDER", "HF_TOKEN"];
   for (const key of ALLOWED_KEYS) {
     if (body[key] !== undefined && body[key] !== "") {
       env[key] = body[key];

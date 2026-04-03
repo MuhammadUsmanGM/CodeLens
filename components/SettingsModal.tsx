@@ -46,8 +46,13 @@ const FIELDS = [
     guideUrl: "https://gitlab.com/-/user_settings/personal_access_tokens",
   },
   {
+    key: "BITBUCKET_USERNAME", label: "Bitbucket Username", required: false, placeholder: "your-username (optional)", icon: Key,
+    guide: "Your Bitbucket username for authentication",
+    guideUrl: "https://bitbucket.org/account/settings/",
+  },
+  {
     key: "BITBUCKET_APP_PASSWORD", label: "Bitbucket App Password", required: false, placeholder: "App password (optional)", icon: Key,
-    guide: "Required for accessing Bitbucket repositories",
+    guide: "Required together with username for Bitbucket repos",
     guideUrl: "https://bitbucket.org/account/settings/app-passwords/",
   },
   {

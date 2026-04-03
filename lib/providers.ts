@@ -2,7 +2,7 @@
 // Abstract fetch layer for GitHub, GitLab, Bitbucket, and local folders
 
 import { ALLOWED_EXTENSIONS, SKIP_DIRS, MAX_FILES, MAX_FILE_SIZE_BYTES } from "./constants";
-import { getGithubToken } from "./env";
+import { getGithubToken, loadCodeLensEnv } from "./env";
 import JSZip from "jszip";
 import { ProviderError } from "./errors";
 import { createLogger } from "./logger";
@@ -256,6 +256,7 @@ async function fetchGithubRepo(owner: string, repo: string, ref?: string): Promi
 // ---------------------------------------------------------------------------
 
 function getGitlabToken(): string | undefined {
+  loadCodeLensEnv();
   return process.env.GITLAB_TOKEN || undefined;
 }
 
@@ -289,6 +290,7 @@ async function fetchGitlabRepo(owner: string, repo: string, ref?: string): Promi
 // ---------------------------------------------------------------------------
 
 function getBitbucketCredentials(): { username?: string; appPassword?: string } {
+  loadCodeLensEnv();
   return {
     username: process.env.BITBUCKET_USERNAME || undefined,
     appPassword: process.env.BITBUCKET_APP_PASSWORD || undefined,
