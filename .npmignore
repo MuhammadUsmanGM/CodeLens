@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build cache
+.next/
+tmp/
+tsconfig.tsbuildinfo
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+
+# Editor & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Dev config
+eslint.config.mjs
+
+# Claude Code
+.claude/
